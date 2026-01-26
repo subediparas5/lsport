@@ -43,6 +43,9 @@ By participating in this project, you agree to maintain a respectful and inclusi
 git clone https://github.com/YOUR_USERNAME/port-patrol.git
 cd port-patrol
 
+# Install pre-commit hooks (recommended)
+./scripts/setup-hooks.sh
+
 # Build
 cargo build
 
@@ -57,6 +60,37 @@ cargo clippy -- -D warnings
 
 # Format code
 cargo fmt
+```
+
+### Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com/) for automated quality checks:
+
+**On every commit:**
+- `cargo fmt` - Formatting
+- `cargo clippy` - Linting
+- File checks (large files, merge conflicts, TOML/YAML syntax)
+
+**On push:**
+- `cargo test` - Full test suite
+
+```bash
+# Install hooks
+./scripts/setup-hooks.sh
+
+# Or manually
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+
+# Run all hooks manually
+pre-commit run --all-files
+
+# Skip temporarily
+git commit --no-verify
+
+# Update hooks
+pre-commit autoupdate
 ```
 
 ## Code Style
@@ -111,4 +145,3 @@ refactor: extract SSH connection logic to separate module
 ## Questions?
 
 Feel free to open an issue for any questions about contributing!
-

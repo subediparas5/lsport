@@ -155,6 +155,18 @@ Port-Patrol features a **k9s-inspired** terminal UI with:
 - Rust 1.85.0 or later
 - OpenSSL development libraries (for SSH support)
 
+### Setup
+
+```bash
+# Install pre-commit hooks
+./scripts/setup-hooks.sh
+
+# Or manually with pre-commit
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
 ### Building
 
 ```bash

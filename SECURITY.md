@@ -44,4 +44,3 @@ If you discover a security vulnerability in Port-Patrol, please report it respon
 2. Use SSH keys instead of passwords
 3. Run without `sudo` when possible
 4. Keep the tool updated to receive security fixes
-

@@ -120,4 +120,3 @@ echo "  - Build binaries for all platforms"
 echo "  - Publish to crates.io (if configured)"
 echo ""
 echo "View release: https://github.com/$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/releases/tag/v$NEW_VERSION"
-

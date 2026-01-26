@@ -39,21 +39,21 @@ jobs:
           release_name: Port-Patrol ${{ github.ref_name }}
           body: |
             ## Port-Patrol ${{ github.ref_name }}
-            
+
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
-            
+
             ### Installation
-            
+
             Download the appropriate binary for your platform below, then:
-            
+
             ```bash
             # Make executable (macOS/Linux)
             chmod +x port-patrol-*
-            
+
             # Run
             ./port-patrol-*
             ```
-            
+
             Or build from source:
             ```bash
             cargo install --git https://github.com/${{ github.repository }}
@@ -145,4 +145,3 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish --allow-dirty
-

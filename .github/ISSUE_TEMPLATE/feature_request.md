@@ -22,4 +22,3 @@ Add any other context or screenshots about the feature request here.
 - [ ] Yes, I'd like to implement this
 - [ ] I can help with testing
 - [ ] No, I'm just suggesting
-

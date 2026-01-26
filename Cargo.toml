@@ -1,0 +1,75 @@
+[package]
+name = "port-patrol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70.0"
+description = "A TUI task manager for localhost ports - identify and kill processes hogging your ports"
+authors = ["Port-Patrol Contributors"]
+license = "MIT"
+repository = "https://github.com/port-patrol/port-patrol"
+homepage = "https://github.com/port-patrol/port-patrol"
+documentation = "https://github.com/port-patrol/port-patrol#readme"
+readme = "README.md"
+keywords = ["cli", "tui", "port", "process", "network"]
+categories = ["command-line-utilities", "development-tools", "network-programming"]
+exclude = [
+    ".github/",
+    "tests/",
+    "*.md",
+    "!README.md",
+]
+
+[[bin]]
+name = "port-patrol"
+path = "src/main.rs"
+
+[dependencies]
+# TUI Framework
+ratatui = "0.28"
+crossterm = "0.28"
+
+# System Information
+sysinfo = "0.31"
+
+# Port to PID mapping
+listeners = "0.3"
+
+# Error handling
+anyhow = "1.0"
+
+# Regex for filtering
+regex = "1.10"
+
+# SSH for remote monitoring
+ssh2 = "0.9"
+
+# CLI argument parsing
+clap = { version = "4.4", features = ["derive"] }
+
+# Home directory detection
+dirs-next = "2.0"
+
+[dev-dependencies]
+# For testing (if needed in future)
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+strip = false
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

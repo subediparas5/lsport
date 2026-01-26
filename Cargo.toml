@@ -1,6 +1,6 @@
 [package]
 name = "port-patrol"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.85.0"
 description = "A TUI task manager for localhost ports - identify and kill processes hogging your ports"

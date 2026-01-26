@@ -25,6 +25,10 @@ exclude = [
 name = "port-patrol"
 path = "src/main.rs"
 
+[[bin]]
+name = "lsport"
+path = "src/main.rs"
+
 [dependencies]
 # TUI Framework
 ratatui = "0.28"

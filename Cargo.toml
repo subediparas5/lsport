@@ -45,6 +45,9 @@ regex = "1.10"
 # SSH for remote monitoring
 ssh2 = "0.9"
 
+# Vendored OpenSSL for cross-compilation (used by ssh2)
+openssl = { version = "0.10", features = ["vendored"] }
+
 # CLI argument parsing
 clap = { version = "4.4", features = ["derive"] }
 

@@ -8,12 +8,14 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# Required for creating releases and uploading assets
+permissions:
+  contents: write
+
 jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,13 +32,9 @@ jobs:
           echo "✅ Version $CARGO_VERSION matches tag"
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Port-Patrol ${{ github.ref_name }}
+          name: Port-Patrol ${{ github.ref_name }}
           body: |
             ## Port-Patrol ${{ github.ref_name }}
 
@@ -93,15 +91,14 @@ jobs:
 
       - name: Install cross-compilation tools
         if: matrix.cross
-        run: |
-          cargo install cross --git https://github.com/cross-rs/cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build release (native)
-        if: "!matrix.cross"
+        if: ${{ !matrix.cross }}
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Build release (cross)
-        if: matrix.cross
+        if: ${{ matrix.cross }}
         run: cross build --release --target ${{ matrix.target }}
 
       - name: Package binary
@@ -111,14 +108,9 @@ jobs:
           cd ../../..
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./${{ matrix.artifact }}.tar.gz
-          asset_name: ${{ matrix.artifact }}.tar.gz
-          asset_content_type: application/gzip
+          files: ${{ matrix.artifact }}.tar.gz
 
   publish-crates:
     name: Publish to crates.io

@@ -126,13 +126,13 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: port-patrol-linux-x86_64
+            artifact: lsport-linux-x86_64
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact: port-patrol-macos-x86_64
+            artifact: lsport-macos-x86_64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: port-patrol-macos-aarch64
+            artifact: lsport-macos-aarch64
     steps:
       - uses: actions/checkout@v4
 
@@ -148,5 +148,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: target/${{ matrix.target }}/release/port-patrol
+          path: target/${{ matrix.target }}/release/lsport
           retention-days: 7

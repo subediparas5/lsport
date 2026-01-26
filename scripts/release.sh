@@ -1,5 +1,5 @@
 #!/bin/bash
-# Release script for Port-Patrol
+# Release script for Lsport
 # Usage: ./scripts/release.sh [major|minor|patch] or ./scripts/release.sh 1.2.3
 
 set -e

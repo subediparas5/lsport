@@ -1,6 +1,6 @@
-# Contributing to Port-Patrol
+# Contributing to Lsport
 
-Thank you for your interest in contributing to Port-Patrol! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Lsport! This document provides guidelines and information for contributors.
 
 ## Code of Conduct
 
@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/port-patrol/port-patrol/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/lsport/lsport/issues)
 2. If not, create a new issue with:
    - Clear, descriptive title
    - Steps to reproduce
@@ -40,8 +40,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/port-patrol.git
-cd port-patrol
+git clone https://github.com/YOUR_USERNAME/lsport.git
+cd lsport
 
 # Install pre-commit hooks (recommended)
 ./scripts/setup-hooks.sh
@@ -104,7 +104,7 @@ pre-commit autoupdate
 
 ## Architecture
 
-Port-Patrol follows the Model-View-Update (MVU) pattern:
+Lsport follows the Model-View-Update (MVU) pattern:
 
 - `main.rs` - Entry point, CLI parsing, event loop
 - `app.rs` - Application state (Model)

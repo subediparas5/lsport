@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup git hooks for Port-Patrol
+# Setup git hooks for Lsport
 
 set -e
 

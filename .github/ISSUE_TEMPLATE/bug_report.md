@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 - OS: [e.g., macOS 14.0, Ubuntu 22.04]
 - Terminal: [e.g., iTerm2, Alacritty, Terminal.app]
 - Rust version: [output of `rustc --version`]
-- Port-Patrol version: [output of `port-patrol --version`]
+- Lsport version: [output of `lsport --version`]
 
 ## Additional context
 Add any other context about the problem here.

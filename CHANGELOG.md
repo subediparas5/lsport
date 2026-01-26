@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-01-26
 
 ### Added
-- Initial release of Port-Patrol
+- Initial release of Lsport
 - Live port monitoring with real-time updates
 - TCP and UDP port scanning support
 - Remote server monitoring via SSH (`--host` flag)
@@ -31,5 +31,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Graceful permission error handling
 - No credential storage - uses SSH agent or key files
 
-[Unreleased]: https://github.com/port-patrol/port-patrol/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/port-patrol/port-patrol/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lsport/lsport/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lsport/lsport/releases/tag/v0.1.0

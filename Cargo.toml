@@ -1,14 +1,14 @@
 [package]
-name = "port-patrol"
+name = "lsport"
 version = "0.1.1"
 edition = "2021"
 rust-version = "1.85.0"
 description = "A TUI task manager for localhost ports - identify and kill processes hogging your ports"
-authors = ["Port-Patrol Contributors"]
+authors = ["lsport Contributors"]
 license = "MIT"
-repository = "https://github.com/subediparas5/port-patrol"
-homepage = "https://github.com/subediparas5/port-patrol"
-documentation = "https://github.com/subediparas5/port-patrol#readme"
+repository = "https://github.com/subediparas5/lsport"
+homepage = "https://github.com/subediparas5/lsport"
+documentation = "https://github.com/subediparas5/lsport#readme"
 readme = "README.md"
 keywords = ["cli", "tui", "port", "process", "network"]
 categories = ["command-line-utilities", "development-tools", "network-programming"]
@@ -20,10 +20,6 @@ exclude = [
     "*.md",
     "!README.md",
 ]
-
-[[bin]]
-name = "port-patrol"
-path = "src/main.rs"
 
 [[bin]]
 name = "lsport"

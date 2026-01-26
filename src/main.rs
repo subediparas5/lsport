@@ -1,4 +1,4 @@
-//! Port-Patrol: A TUI task manager for localhost ports
+//! Lsport: A TUI task manager for localhost ports
 //!
 //! This is the main entry point that sets up the terminal,
 //! runs the event loop, and coordinates the Model-View-Update cycle.
@@ -35,9 +35,9 @@ const POLL_RATE: Duration = Duration::from_millis(50);
 /// Default scan interval for refreshing port data (2 seconds)
 const DEFAULT_SCAN_INTERVAL: u64 = 2;
 
-/// Port-Patrol: A TUI task manager for localhost ports
+/// Lsport: A TUI task manager for localhost ports
 #[derive(Parser, Debug)]
-#[command(name = "port-patrol")]
+#[command(name = "lsport")]
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Remote host to monitor (format: user@host:port or user@host or host)

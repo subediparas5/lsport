@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Port-Patrol, please report it responsibly:
+If you discover a security vulnerability in Lsport, please report it responsibly:
 
 1. **Do NOT** open a public issue
 2. Email the maintainers directly or use GitHub's private vulnerability reporting
@@ -22,7 +22,7 @@ If you discover a security vulnerability in Port-Patrol, please report it respon
 
 ### SSH Connections
 
-- Port-Patrol uses the `ssh2` crate for remote connections
+- Lsport uses the `ssh2` crate for remote connections
 - Credentials are never stored - authentication uses SSH agent or key files
 - Host key verification follows system SSH configuration
 

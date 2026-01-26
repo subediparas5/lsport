@@ -58,7 +58,7 @@ pub fn render(frame: &mut Frame, app: &App) {
 fn render_top_bar(frame: &mut Frame, area: Rect) {
     let bar = Paragraph::new(Line::from(vec![
         Span::styled(" ⚓ ", Style::default().fg(COLOR_ACCENT).bold()),
-        Span::styled("Port-Patrol", Style::default().fg(COLOR_ACCENT).bold()),
+        Span::styled("Lsport", Style::default().fg(COLOR_ACCENT).bold()),
         Span::styled(" │ ", Style::default().fg(COLOR_BORDER)),
         Span::styled(
             "Localhost Port Monitor",
@@ -516,7 +516,7 @@ fn render_help_popup(frame: &mut Frame) {
         .block(
             Block::default()
                 .title(Span::styled(
-                    " ⚓ Port-Patrol Help ",
+                    " ⚓ Lsport Help ",
                     Style::default().fg(COLOR_ACCENT).bold(),
                 ))
                 .borders(Borders::ALL)

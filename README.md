@@ -1,9 +1,9 @@
-# ⚓ Port-Patrol
+# ⚓ Lsport
 
 A Terminal User Interface (TUI) task manager for localhost ports. Quickly identify which process is hogging a port and kill it instantly.
 
-[![CI](https://github.com/port-patrol/port-patrol/actions/workflows/ci.yml/badge.svg)](https://github.com/port-patrol/port-patrol/actions/workflows/ci.yml)
-[![Release](https://github.com/port-patrol/port-patrol/actions/workflows/release.yml/badge.svg)](https://github.com/port-patrol/port-patrol/releases)
+[![CI](https://github.com/lsport/lsport/actions/workflows/ci.yml/badge.svg)](https://github.com/lsport/lsport/actions/workflows/ci.yml)
+[![Release](https://github.com/lsport/lsport/actions/workflows/release.yml/badge.svg)](https://github.com/lsport/lsport/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
 
@@ -22,63 +22,63 @@ A Terminal User Interface (TUI) task manager for localhost ports. Quickly identi
 
 ### From Releases (Recommended)
 
-Download the latest binary from [GitHub Releases](https://github.com/port-patrol/port-patrol/releases):
+Download the latest binary from [GitHub Releases](https://github.com/lsport/lsport/releases):
 
 ```bash
 # macOS (Apple Silicon)
-curl -LO https://github.com/port-patrol/port-patrol/releases/latest/download/port-patrol-macos-aarch64.tar.gz
-tar -xzf port-patrol-macos-aarch64.tar.gz
-chmod +x port-patrol && sudo mv port-patrol /usr/local/bin/
+curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-macos-aarch64.tar.gz
+tar -xzf lsport-macos-aarch64.tar.gz
+chmod +x lsport && sudo mv lsport /usr/local/bin/
 
 # macOS (Intel)
-curl -LO https://github.com/port-patrol/port-patrol/releases/latest/download/port-patrol-macos-x86_64.tar.gz
-tar -xzf port-patrol-macos-x86_64.tar.gz
-chmod +x port-patrol && sudo mv port-patrol /usr/local/bin/
+curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-macos-x86_64.tar.gz
+tar -xzf lsport-macos-x86_64.tar.gz
+chmod +x lsport && sudo mv lsport /usr/local/bin/
 
 # Linux (x86_64)
-curl -LO https://github.com/port-patrol/port-patrol/releases/latest/download/port-patrol-linux-x86_64.tar.gz
-tar -xzf port-patrol-linux-x86_64.tar.gz
-chmod +x port-patrol && sudo mv port-patrol /usr/local/bin/
+curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-linux-x86_64.tar.gz
+tar -xzf lsport-linux-x86_64.tar.gz
+chmod +x lsport && sudo mv lsport /usr/local/bin/
 ```
 
 ### From Source
 
 ```bash
 # Clone and build
-git clone https://github.com/port-patrol/port-patrol.git
-cd port-patrol
+git clone https://github.com/lsport/lsport.git
+cd lsport
 cargo build --release
 
 # Install
-sudo cp target/release/port-patrol /usr/local/bin/
+sudo cp target/release/lsport /usr/local/bin/
 ```
 
 ### From crates.io
 
 ```bash
-cargo install port-patrol
+cargo install lsport
 ```
 
 ## Usage
 
 ```bash
 # Monitor localhost (default)
-port-patrol
+lsport
 
 # For killing system processes, you may need sudo
-sudo port-patrol
+sudo lsport
 
 # Monitor a remote server via SSH
-port-patrol --host user@example.com
+lsport --host user@example.com
 
 # Remote server with custom SSH port
-port-patrol --host user@example.com:2222
+lsport --host user@example.com:2222
 
 # Use a specific SSH key
-port-patrol --host user@example.com -i ~/.ssh/my_key
+lsport --host user@example.com -i ~/.ssh/my_key
 
 # Custom scan interval (5 seconds)
-port-patrol -s 5
+lsport -s 5
 ```
 
 ### CLI Options
@@ -139,7 +139,7 @@ The context bar shows "Regex:" when your filter is a valid regex pattern.
 
 ## UI Design
 
-Port-Patrol features a **k9s-inspired** terminal UI with:
+Lsport features a **k9s-inspired** terminal UI with:
 
 - 🎨 **Dark theme** with blue/cyan accents
 - 📊 **Clean table** with alternating row colors

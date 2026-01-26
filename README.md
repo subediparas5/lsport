@@ -5,7 +5,7 @@ A Terminal User Interface (TUI) task manager for localhost ports. Quickly identi
 [![CI](https://github.com/port-patrol/port-patrol/actions/workflows/ci.yml/badge.svg)](https://github.com/port-patrol/port-patrol/actions/workflows/ci.yml)
 [![Release](https://github.com/port-patrol/port-patrol/actions/workflows/release.yml/badge.svg)](https://github.com/port-patrol/port-patrol/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
 
 ## Features
 
@@ -152,7 +152,7 @@ Port-Patrol features a **k9s-inspired** terminal UI with:
 
 ### Prerequisites
 
-- Rust 1.70.0 or later
+- Rust 1.85.0 or later
 - OpenSSL development libraries (for SSH support)
 
 ### Building

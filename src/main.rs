@@ -88,7 +88,7 @@ fn restore_terminal() -> Result<()> {
 
 /// Scanner mode - either local or remote
 enum ScannerMode {
-    Local(Scanner),
+    Local(Box<Scanner>),
     Remote(RemoteScanner),
 }
 
@@ -146,7 +146,7 @@ fn run(mut terminal: Terminal<CrosstermBackend<io::Stdout>>, args: Args) -> Resu
         ScannerMode::Remote(remote_scanner)
     } else {
         // Local mode
-        ScannerMode::Local(Scanner::new())
+        ScannerMode::Local(Box::default())
     };
 
     // Perform initial scan
@@ -373,7 +373,7 @@ mod tests {
     }
 
     fn create_test_scanner() -> ScannerMode {
-        ScannerMode::Local(Scanner::new())
+        ScannerMode::Local(Box::default())
     }
 
     /// Helper to call handle_key_event without scanner (for tests that don't need kill)

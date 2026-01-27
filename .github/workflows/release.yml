@@ -461,12 +461,18 @@ jobs:
           cd ..
           dput mentors lsport_${VERSION}-1_source.changes
 
+      - name: Copy artifacts to workspace
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          mkdir -p debian-artifacts
+          cp ../lsport_${VERSION}.orig.tar.gz debian-artifacts/
+          cp ../lsport_${VERSION}-1.debian.tar.xz debian-artifacts/
+          cp ../lsport_${VERSION}-1.dsc debian-artifacts/
+          cp ../lsport_${VERSION}-1_source.changes debian-artifacts/
+          cp ../lsport_${VERSION}-1_source.buildinfo debian-artifacts/ || true
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: debian-source-package
-          path: |
-            ../lsport_*.orig.tar.gz
-            ../lsport_*.debian.tar.xz
-            ../lsport_*.dsc
-            ../lsport_*_source.changes
+          path: debian-artifacts/

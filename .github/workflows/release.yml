@@ -55,9 +55,13 @@ jobs:
             brew install subediparas5/tap/lsport
             ```
 
-            **Debian/Ubuntu (.deb):**
+            **Debian/Ubuntu (APT):**
             ```bash
-            # Download the .deb for your architecture from assets below, then:
+            curl -fsSL https://subediparas5.github.io/lsport/install.sh | bash
+            ```
+
+            Or manually download the `.deb` from assets below:
+            ```bash
             sudo dpkg -i lsport_${{ steps.version.outputs.version }}_amd64.deb
             ```
 
@@ -173,12 +177,205 @@ jobs:
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
-      - name: Update Homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v3
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
         with:
-          formula-name: lsport
-          homebrew-tap: subediparas5/homebrew-tap
-          download-url: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lsport-linux-x86_64.tar.gz
-          create-pullrequest: true
+          repository: subediparas5/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula tag
+        run: |
+          cd homebrew-tap
+          # Update the tag in the formula
+          sed -i 's/tag: "v[0-9]*\.[0-9]*\.[0-9]*"/tag: "${{ github.ref_name }}"/' Formula/lsport.rb
+          cat Formula/lsport.rb
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/lsport.rb
+          git commit -m "Update lsport to ${{ github.ref_name }}" || echo "No changes"
+          git push
+
+  update-apt-repo:
+    name: Update APT Repository
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+        continue-on-error: true
+
+      - name: Create gh-pages branch if it doesn't exist
+        run: |
+          if ! git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            echo "# APT Repository for lsport" > README.md
+            git add README.md
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Initialize gh-pages branch"
+            git push origin gh-pages
+          fi
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: repo
+
+      - name: Download .deb files from release
         env:
-          COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p debs
+          VERSION="${{ needs.create-release.outputs.version }}"
+
+          # Download amd64 deb
+          gh release download "${{ github.ref_name }}" \
+            --pattern "lsport_${VERSION}_amd64.deb" \
+            --dir debs \
+            --repo ${{ github.repository }} || echo "amd64 deb not found"
+
+          # Download arm64 deb
+          gh release download "${{ github.ref_name }}" \
+            --pattern "lsport_${VERSION}_arm64.deb" \
+            --dir debs \
+            --repo ${{ github.repository }} || echo "arm64 deb not found"
+
+          ls -la debs/
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --export-secret-keys --armor > /dev/null
+
+      - name: Setup APT repository structure
+        run: |
+          cd repo
+          mkdir -p pool/main dists/stable/main/binary-amd64 dists/stable/main/binary-arm64
+
+          # Copy new .deb files
+          cp ../debs/*.deb pool/main/ 2>/dev/null || true
+
+          # Export public key
+          gpg --armor --export "${{ secrets.APT_GPG_KEY_ID }}" > KEY.gpg
+
+      - name: Generate Packages files
+        run: |
+          cd repo
+
+          # Generate Packages for amd64
+          dpkg-scanpackages --arch amd64 pool/main /dev/null > dists/stable/main/binary-amd64/Packages 2>/dev/null || true
+          gzip -k -f dists/stable/main/binary-amd64/Packages
+
+          # Generate Packages for arm64
+          dpkg-scanpackages --arch arm64 pool/main /dev/null > dists/stable/main/binary-arm64/Packages 2>/dev/null || true
+          gzip -k -f dists/stable/main/binary-arm64/Packages
+
+      - name: Generate Release file
+        run: |
+          cd repo/dists/stable
+
+          cat > Release << EOF
+          Origin: lsport
+          Label: lsport
+          Suite: stable
+          Codename: stable
+          Architectures: amd64 arm64
+          Components: main
+          Description: APT repository for lsport
+          EOF
+
+          # Add checksums
+          apt-ftparchive release . >> Release
+
+      - name: Sign Release file
+        run: |
+          cd repo/dists/stable
+
+          # Create InRelease (inline signed)
+          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
+            --pinentry-mode loopback \
+            --clearsign \
+            --default-key "${{ secrets.APT_GPG_KEY_ID }}" \
+            -o InRelease Release
+
+          # Create Release.gpg (detached signature)
+          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
+            --pinentry-mode loopback \
+            --default-key "${{ secrets.APT_GPG_KEY_ID }}" \
+            -abs -o Release.gpg Release
+
+      - name: Create installation script
+        run: |
+          cd repo
+          cat > install.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          echo "Installing lsport APT repository..."
+
+          # Download and install GPG key
+          curl -fsSL https://subediparas5.github.io/lsport/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/lsport.gpg
+
+          # Add repository
+          echo "deb [signed-by=/usr/share/keyrings/lsport.gpg arch=$(dpkg --print-architecture)] https://subediparas5.github.io/lsport stable main" | sudo tee /etc/apt/sources.list.d/lsport.list
+
+          # Update and install
+          sudo apt update
+          sudo apt install -y lsport
+
+          echo "✅ lsport installed successfully!"
+          EOF
+          chmod +x install.sh
+
+      - name: Update README
+        run: |
+          cd repo
+          cat > README.md << 'EOF'
+          # lsport APT Repository
+
+          APT repository for [lsport](https://github.com/subediparas5/lsport) - A TUI for managing local and remote ports via SSH.
+
+          ## Quick Install
+
+          ```bash
+          curl -fsSL https://subediparas5.github.io/lsport/install.sh | bash
+          ```
+
+          ## Manual Install
+
+          ```bash
+          # Add GPG key
+          curl -fsSL https://subediparas5.github.io/lsport/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/lsport.gpg
+
+          # Add repository
+          echo "deb [signed-by=/usr/share/keyrings/lsport.gpg arch=$(dpkg --print-architecture)] https://subediparas5.github.io/lsport stable main" | sudo tee /etc/apt/sources.list.d/lsport.list
+
+          # Install
+          sudo apt update
+          sudo apt install lsport
+          ```
+
+          ## Update
+
+          ```bash
+          sudo apt update && sudo apt upgrade lsport
+          ```
+          EOF
+
+      - name: Commit and push
+        run: |
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update APT repository for ${{ github.ref_name }}" || echo "No changes to commit"
+          git push origin gh-pages

@@ -1,14 +1,14 @@
 Package: lsport
-Version: 0.1.2-1
+Version: 0.2.4-1
 Architecture: amd64
 Maintainer: Paras Subedi <subediparas5@gmail.com>
-Installed-Size: 7208
-Depends: libc6 (>= 2.39), zlib1g (>= 1:1.1.4)
-Filename: pool/main/lsport_0.1.2_amd64.deb
-Size: 2068284
-MD5sum: 73c696ccbb7292443f7953491476b1a1
-SHA1: ec28c80857b421a6da790a4f087c9ba0dfb89c02
-SHA256: 5a43ba541f9a63a4bbc6545ebf6c7523d0b483ae857b4cb5e8954ef1369b307f
+Installed-Size: 7206
+Depends: libc6 (>= 2.34), zlib1g (>= 1:1.1.4)
+Filename: pool/main/lsport_0.2.4_amd64.deb
+Size: 2063312
+MD5sum: c1b77b340f6fcf9dd4136f78722d5578
+SHA1: e6631b67103523b555b8d5aae1b06130212a4f17
+SHA256: 77603b8d1eb50974591f013769a419bee870dde685b72d8ca0a89ebf27018560
 Section: utils
 Priority: optional
 Homepage: https://github.com/subediparas5/lsport

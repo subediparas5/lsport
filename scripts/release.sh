@@ -97,9 +97,22 @@ rm -f Cargo.toml.bak
 echo -e "${YELLOW}Updating Cargo.lock...${NC}"
 cargo check --quiet
 
+# Update debian/changelog
+echo -e "${YELLOW}Updating debian/changelog...${NC}"
+GIT_NAME=$(git config user.name)
+GIT_EMAIL=$(git config user.email)
+cat > debian/changelog << EOF
+lsport (${NEW_VERSION}-1) unstable; urgency=medium
+
+  * Release version ${NEW_VERSION}
+  * See https://github.com/subediparas5/lsport/releases/tag/v${NEW_VERSION}
+
+ -- ${GIT_NAME} <${GIT_EMAIL}>  $(date -R)
+EOF
+
 # Commit
 echo -e "${YELLOW}Committing...${NC}"
-git add Cargo.toml Cargo.lock
+git add Cargo.toml Cargo.lock debian/changelog
 git commit -m "chore: release v$NEW_VERSION"
 
 # Tag

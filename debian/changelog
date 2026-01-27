@@ -1,8 +1,6 @@
-lsport (0.1.1-1) unstable; urgency=medium
+lsport (0.2.6-1) unstable; urgency=medium
 
-  * Initial release. (Closes: #nnnn)
-  * TUI for managing local and remote ports via SSH
-  * Features: live monitoring, TCP/UDP support, SSH remote monitoring,
-    vim-style navigation, process termination, regex filtering
+  * Release version 0.2.6
+  * See https://github.com/subediparas5/lsport/releases/tag/v0.2.6
 
  -- Paras Subedi <subediparas5@gmail.com>  Mon, 27 Jan 2026 12:00:00 +0000

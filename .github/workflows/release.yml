@@ -396,14 +396,13 @@ jobs:
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     container:
-      image: debian:bookworm
+      image: rust:latest
     steps:
-      - name: Install dependencies
+      - name: Install Debian packaging tools
         run: |
           apt-get update
-          apt-get install -y \
-            build-essential debhelper devscripts dput gnupg git curl \
-            rustc cargo libssl-dev pkg-config
+          apt-get install -y debhelper devscripts dput gnupg libssl-dev pkg-config
+          rustc --version
 
       - uses: actions/checkout@v4
         with:
@@ -444,7 +443,7 @@ jobs:
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
           tar --exclude='.git' --exclude='debian' -czf ../lsport_${VERSION}.orig.tar.gz .
-          dpkg-buildpackage -S -sa -k"${{ steps.gpg_debian.outputs.key_id }}"
+          dpkg-buildpackage -S -sa -d -k"${{ steps.gpg_debian.outputs.key_id }}"
 
       - name: Configure dput
         run: |

@@ -300,6 +300,9 @@ jobs:
         run: |
           cd repo/dists/stable
 
+          # Remove existing signed files
+          rm -f InRelease Release.gpg
+
           # Create InRelease (inline signed)
           echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
             --pinentry-mode loopback \

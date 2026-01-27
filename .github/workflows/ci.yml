@@ -13,11 +13,28 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  # Gate job - determines if CI should run
+  check:
+    name: Check if CI should run
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check commit message
+        id: check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == chore:\ release* ]]; then
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "Skipping CI for release commit"
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          fi
+
   test:
     name: Test (${{ matrix.os }} / ${{ matrix.rust }})
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
-    # Skip CI for release commits
-    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
     strategy:
       fail-fast: false
       matrix:
@@ -50,9 +67,10 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
-  # Minimum Supported Rust Version
   msrv:
     name: MSRV (1.85.0)
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +85,8 @@ jobs:
 
   clippy:
     name: Clippy
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +101,8 @@ jobs:
 
   fmt:
     name: Format
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -95,6 +117,8 @@ jobs:
 
   docs:
     name: Documentation
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +133,8 @@ jobs:
 
   security:
     name: Security Audit
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -119,12 +145,11 @@ jobs:
       - name: Run security audit
         run: cargo audit
 
-  # Only run release builds on push to main
   release:
     name: Release Build (${{ matrix.artifact }})
     runs-on: ${{ matrix.os }}
-    needs: [test, clippy, fmt, msrv]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [check, test, clippy, fmt, msrv]
+    if: needs.check.outputs.should_run == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
         include:

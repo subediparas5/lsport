@@ -2,8 +2,8 @@
 
 A TUI for managing local and remote ports via SSH. Quickly identify which process is hogging a port and kill it instantly.
 
-[![CI](https://github.com/lsport/lsport/actions/workflows/ci.yml/badge.svg)](https://github.com/lsport/lsport/actions/workflows/ci.yml)
-[![Release](https://github.com/lsport/lsport/actions/workflows/release.yml/badge.svg)](https://github.com/lsport/lsport/releases)
+[![CI](https://github.com/subediparas5/lsport/actions/workflows/ci.yml/badge.svg)](https://github.com/subediparas5/lsport/actions/workflows/ci.yml)
+[![Release](https://github.com/subediparas5/lsport/actions/workflows/release.yml/badge.svg)](https://github.com/subediparas5/lsport/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
 
@@ -20,44 +20,44 @@ A TUI for managing local and remote ports via SSH. Quickly identify which proces
 
 ## Installation
 
-### From Releases (Recommended)
-
-Download the latest binary from [GitHub Releases](https://github.com/lsport/lsport/releases):
+### macOS (Homebrew)
 
 ```bash
-# macOS (Apple Silicon)
-curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-macos-aarch64.tar.gz
-tar -xzf lsport-macos-aarch64.tar.gz
-chmod +x lsport && sudo mv lsport /usr/local/bin/
+brew install subediparas5/tap/lsport
+```
 
-# macOS (Intel)
-curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-macos-x86_64.tar.gz
-tar -xzf lsport-macos-x86_64.tar.gz
-chmod +x lsport && sudo mv lsport /usr/local/bin/
+### Linux (Debian/Ubuntu)
 
-# Linux (x86_64)
-curl -LO https://github.com/lsport/lsport/releases/latest/download/lsport-linux-x86_64.tar.gz
-tar -xzf lsport-linux-x86_64.tar.gz
-chmod +x lsport && sudo mv lsport /usr/local/bin/
+```bash
+curl -fsSL https://subediparas5.github.io/lsport/install.sh | bash
+```
+
+Or manually:
+```bash
+# Add GPG key and repository
+curl -fsSL https://subediparas5.github.io/lsport/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/lsport.gpg
+echo "deb [signed-by=/usr/share/keyrings/lsport.gpg arch=$(dpkg --print-architecture)] https://subediparas5.github.io/lsport stable main" | sudo tee /etc/apt/sources.list.d/lsport.list
+sudo apt update && sudo apt install lsport
+```
+
+### Cargo (Any platform)
+
+```bash
+cargo install lsport
 ```
 
 ### From Source
 
 ```bash
-# Clone and build
-git clone https://github.com/lsport/lsport.git
+git clone https://github.com/subediparas5/lsport.git
 cd lsport
 cargo build --release
-
-# Install
 sudo cp target/release/lsport /usr/local/bin/
 ```
 
-### From crates.io
+### Binary Download
 
-```bash
-cargo install lsport
-```
+Download pre-built binaries from [GitHub Releases](https://github.com/subediparas5/lsport/releases).
 
 ## Usage
 

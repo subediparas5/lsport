@@ -87,11 +87,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             artifact: lsport-linux-x86_64
             deb_arch: amd64
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             artifact: lsport-linux-aarch64
             deb_arch: arm64
@@ -379,3 +379,77 @@ jobs:
           git add -A
           git commit -m "Update APT repository for ${{ github.ref_name }}" || echo "No changes to commit"
           git push origin gh-pages
+
+  upload-debian-mentors:
+    name: Upload to Debian Mentors
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential debhelper devscripts dput gnupg git curl \
+            rustc cargo libssl-dev pkg-config
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.DEBIAN_GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye || true
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "Paras Subedi"
+          git config --global user.email "subediparas5@gmail.com"
+          git config --global --add safe.directory /__w/lsport/lsport
+
+      - name: Update changelog version
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          cat > debian/changelog << EOF
+          lsport (${VERSION}-1) unstable; urgency=medium
+
+            * Release version ${VERSION}
+            * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
+
+           -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
+          EOF
+
+      - name: Build source package
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          tar --exclude='.git' --exclude='debian' -czf ../lsport_${VERSION}.orig.tar.gz .
+          dpkg-buildpackage -S -sa -k"${{ secrets.DEBIAN_GPG_KEY_ID }}"
+
+      - name: Configure dput
+        run: |
+          cat > ~/.dput.cf << EOF
+          [mentors]
+          fqdn = mentors.debian.net
+          incoming = /upload
+          method = https
+          allow_unsigned_uploads = 0
+          EOF
+
+      - name: Upload to mentors.debian.net
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          cd ..
+          dput mentors lsport_${VERSION}-1_source.changes
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-source-package
+          path: |
+            ../lsport_*.orig.tar.gz
+            ../lsport_*.debian.tar.xz
+            ../lsport_*.dsc
+            ../lsport_*_source.changes

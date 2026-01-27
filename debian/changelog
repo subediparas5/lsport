@@ -1,0 +1,8 @@
+lsport (0.1.1-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #nnnn)
+  * TUI for managing local and remote ports via SSH
+  * Features: live monitoring, TCP/UDP support, SSH remote monitoring,
+    vim-style navigation, process termination, regex filtering
+
+ -- Paras Subedi <subediparas5@gmail.com>  Mon, 27 Jan 2026 12:00:00 +0000

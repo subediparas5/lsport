@@ -1,0 +1,27 @@
+Source: lsport
+Section: utils
+Priority: optional
+Maintainer: Paras Subedi <subediparas5@gmail.com>
+Build-Depends: debhelper-compat (= 13), cargo, rustc (>= 1.70)
+Standards-Version: 4.6.2
+Homepage: https://github.com/subediparas5/lsport
+Vcs-Browser: https://github.com/subediparas5/lsport
+Vcs-Git: https://github.com/subediparas5/lsport.git
+Rules-Requires-Root: no
+
+Package: lsport
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TUI for managing local and remote ports via SSH
+ Lsport is a terminal user interface application for managing ports
+ on local and remote machines. It allows you to quickly identify
+ which process is using a port and kill it instantly.
+ .
+ Features include:
+  - Live port monitoring with real-time updates
+  - TCP and UDP support
+  - Remote server monitoring via SSH
+  - Vim-style navigation
+  - Process termination with a single keystroke
+  - Regex filtering
+  - K9s-inspired dark theme UI

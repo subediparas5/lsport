@@ -1,0 +1,18 @@
+Package: lsport
+Version: 0.1.2-1
+Architecture: arm64
+Maintainer: Paras Subedi <subediparas5@gmail.com>
+Installed-Size: 6350
+Filename: pool/main/lsport_0.1.2_arm64.deb
+Size: 2345652
+MD5sum: 057cd26c04f3e99352b6c8c5d490d6df
+SHA1: 066b4a8ef618e975f34ae4a5a901575ff0b6d125
+SHA256: c031c2c711d59544742dd74c5869234c980580bb73c4b8a76e0020a1d09e10e7
+Section: utils
+Priority: optional
+Homepage: https://github.com/subediparas5/lsport
+Description: A TUI for managing local and remote ports via SSH
+ A fast, interactive TUI for managing local and remote ports via SSH.
+ Identify processes using ports and kill them with a keystroke.
+ Supports local and remote (SSH) monitoring.
+

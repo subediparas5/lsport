@@ -1,4 +1,4 @@
-//! Lsport: A TUI task manager for localhost ports
+//! Lsport: A TUI for managing local and remote ports via SSH
 //!
 //! This is the main entry point that sets up the terminal,
 //! runs the event loop, and coordinates the Model-View-Update cycle.
@@ -35,7 +35,7 @@ const POLL_RATE: Duration = Duration::from_millis(50);
 /// Default scan interval for refreshing port data (2 seconds)
 const DEFAULT_SCAN_INTERVAL: u64 = 2;
 
-/// Lsport: A TUI task manager for localhost ports
+/// Lsport: A TUI for managing local and remote ports via SSH
 #[derive(Parser, Debug)]
 #[command(name = "lsport")]
 #[command(author, version, about, long_about = None)]

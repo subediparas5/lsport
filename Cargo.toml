@@ -3,7 +3,7 @@ name = "lsport"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.85.0"
-description = "A TUI task manager for localhost ports - identify and kill processes hogging your ports"
+description = "A TUI for managing local and remote ports via SSH"
 authors = ["lsport Contributors"]
 license = "MIT"
 repository = "https://github.com/subediparas5/lsport"
@@ -78,3 +78,18 @@ unsafe_code = "forbid"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }
+
+# Debian package configuration (for cargo-deb)
+[package.metadata.deb]
+maintainer = "Paras Subedi <subediparas5@gmail.com>"
+copyright = "2024-2026, Paras Subedi"
+license-file = ["LICENSE", "0"]
+extended-description = """
+A fast, interactive TUI for managing local and remote ports via SSH.
+Identify processes using ports and kill them with a keystroke.
+Supports local and remote (SSH) monitoring."""
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/lsport", "usr/bin/", "755"],
+]

@@ -1,6 +1,6 @@
 # ⚓ Lsport
 
-A Terminal User Interface (TUI) task manager for localhost ports. Quickly identify which process is hogging a port and kill it instantly.
+A TUI for managing local and remote ports via SSH. Quickly identify which process is hogging a port and kill it instantly.
 
 [![CI](https://github.com/lsport/lsport/actions/workflows/ci.yml/badge.svg)](https://github.com/lsport/lsport/actions/workflows/ci.yml)
 [![Release](https://github.com/lsport/lsport/actions/workflows/release.yml/badge.svg)](https://github.com/lsport/lsport/releases)

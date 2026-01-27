@@ -16,6 +16,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }} / ${{ matrix.rust }})
     runs-on: ${{ matrix.os }}
+    # Skip CI for release commits
+    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
     strategy:
       fail-fast: false
       matrix:

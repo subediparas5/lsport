@@ -100,7 +100,7 @@ cargo check --quiet
 # Commit
 echo -e "${YELLOW}Committing...${NC}"
 git add Cargo.toml Cargo.lock
-git commit -m "chore: release v$NEW_VERSION [skip ci]"
+git commit -m "chore: release v$NEW_VERSION"
 
 # Tag
 echo -e "${YELLOW}Creating tag v$NEW_VERSION...${NC}"

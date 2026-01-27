@@ -252,9 +252,13 @@ jobs:
           ls -la debs/
 
       - name: Import GPG key
+        id: gpg
         run: |
           echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --export-secret-keys --armor > /dev/null
+          # Auto-detect key ID from imported key
+          KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep 'sec' | head -1 | awk -F'/' '{print $2}' | awk '{print $1}')
+          echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
+          echo "Using GPG key: $KEY_ID"
 
       - name: Setup APT repository structure
         run: |
@@ -265,7 +269,7 @@ jobs:
           cp ../debs/*.deb pool/main/ 2>/dev/null || true
 
           # Export public key
-          gpg --armor --export "${{ secrets.APT_GPG_KEY_ID }}" > KEY.gpg
+          gpg --armor --export "${{ steps.gpg.outputs.key_id }}" > KEY.gpg
 
       - name: Generate Packages files
         run: |
@@ -307,13 +311,13 @@ jobs:
           echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
             --pinentry-mode loopback \
             --clearsign \
-            --default-key "${{ secrets.APT_GPG_KEY_ID }}" \
+            --default-key "${{ steps.gpg.outputs.key_id }}" \
             -o InRelease Release
 
           # Create Release.gpg (detached signature)
           echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
             --pinentry-mode loopback \
-            --default-key "${{ secrets.APT_GPG_KEY_ID }}" \
+            --default-key "${{ steps.gpg.outputs.key_id }}" \
             -abs -o Release.gpg Release
 
       - name: Create installation script

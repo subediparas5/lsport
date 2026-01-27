@@ -410,10 +410,17 @@ jobs:
           fetch-depth: 0
 
       - name: Import GPG key
+        id: gpg_debian
         run: |
-          echo "${{ secrets.DEBIAN_GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpg-connect-agent reloadagent /bye || true
+          echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
+          # Auto-detect key ID
+          KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
+          echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
+          echo "Using GPG key: $KEY_ID"
+          if [ -z "$KEY_ID" ]; then
+            echo "ERROR: No GPG key found!"
+            exit 1
+          fi
 
       - name: Configure Git
         run: |
@@ -437,7 +444,7 @@ jobs:
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
           tar --exclude='.git' --exclude='debian' -czf ../lsport_${VERSION}.orig.tar.gz .
-          dpkg-buildpackage -S -sa -k"${{ secrets.DEBIAN_GPG_KEY_ID }}"
+          dpkg-buildpackage -S -sa -k"${{ steps.gpg_debian.outputs.key_id }}"
 
       - name: Configure dput
         run: |

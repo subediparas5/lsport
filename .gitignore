@@ -29,3 +29,21 @@ tarpaulin-report.html
 # Temporary files
 *.tmp
 *.temp
+
+# Debian package build artifacts
+debian/cargo/
+debian/lsport/
+debian/files
+debian/*.substvars
+debian/debhelper-build-stamp
+debian/.debhelper/
+lsport_*.deb
+lsport_*.buildinfo
+lsport_*.changes
+lsport_*.dsc
+lsport_*.tar.gz
+lsport_*.tar.xz
+lsport_*.tar.bz2
+lsport_*.tar.lzma
+lsport_*.tar.lz
+lsport_*.tar.lz4

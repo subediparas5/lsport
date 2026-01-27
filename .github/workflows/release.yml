@@ -256,9 +256,15 @@ jobs:
         run: |
           echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
           # Auto-detect key ID from imported key
-          KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep 'sec' | head -1 | awk -F'/' '{print $2}' | awk '{print $1}')
+          KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
           echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
           echo "Using GPG key: $KEY_ID"
+          # Verify key was found
+          if [ -z "$KEY_ID" ]; then
+            echo "ERROR: No GPG key found!"
+            gpg --list-secret-keys
+            exit 1
+          fi
 
       - name: Setup APT repository structure
         run: |
@@ -308,15 +314,13 @@ jobs:
           rm -f InRelease Release.gpg
 
           # Create InRelease (inline signed)
-          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
-            --pinentry-mode loopback \
+          gpg --batch --yes --pinentry-mode loopback \
             --clearsign \
             --default-key "${{ steps.gpg.outputs.key_id }}" \
             -o InRelease Release
 
           # Create Release.gpg (detached signature)
-          echo "${{ secrets.APT_GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 \
-            --pinentry-mode loopback \
+          gpg --batch --yes --pinentry-mode loopback \
             --default-key "${{ steps.gpg.outputs.key_id }}" \
             -abs -o Release.gpg Release
 

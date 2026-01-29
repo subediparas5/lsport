@@ -130,6 +130,14 @@ pub struct App {
     pub filter_is_regex: bool,
     /// Remote host being monitored (None for localhost)
     pub remote_host: Option<String>,
+    /// Whether connect input mode is active
+    pub connect_mode: bool,
+    /// Current connection input string
+    pub connect_input: String,
+    /// SSH key path input (optional, for connect mode)
+    pub connect_key_input: String,
+    /// Whether entering SSH key path (second step of connect)
+    pub connect_key_mode: bool,
 }
 
 impl Default for App {
@@ -156,6 +164,10 @@ impl App {
             compiled_regex: None,
             filter_is_regex: false,
             remote_host: None,
+            connect_mode: false,
+            connect_input: String::new(),
+            connect_key_input: String::new(),
+            connect_key_mode: false,
         }
     }
 
@@ -329,6 +341,56 @@ impl App {
         self.filter.pop();
     }
 
+    /// Enter connect mode
+    pub fn enter_connect_mode(&mut self) {
+        self.connect_mode = true;
+        self.connect_key_mode = false;
+        self.connect_input.clear();
+        self.connect_key_input.clear();
+        self.set_info("Connect: Enter host (user@host:port or user@host or host), Enter to connect, Esc to cancel");
+    }
+
+    /// Exit connect mode
+    pub fn exit_connect_mode(&mut self) {
+        self.connect_mode = false;
+        self.connect_key_mode = false;
+        self.connect_input.clear();
+        self.connect_key_input.clear();
+        self.set_info("Connect cancelled");
+    }
+
+    /// Switch to SSH key input mode (second step of connect)
+    pub fn enter_connect_key_mode(&mut self) {
+        if !self.connect_input.is_empty() {
+            self.connect_key_mode = true;
+            self.set_info("Connect: Enter SSH key path (optional, Enter to skip), Esc to cancel");
+        }
+    }
+
+    /// Add character to connect input
+    pub fn connect_push(&mut self, c: char) {
+        if self.connect_key_mode {
+            self.connect_key_input.push(c);
+        } else {
+            self.connect_input.push(c);
+        }
+    }
+
+    /// Remove last character from connect input
+    pub fn connect_pop(&mut self) {
+        if self.connect_key_mode {
+            self.connect_key_input.pop();
+        } else {
+            self.connect_input.pop();
+        }
+    }
+
+    /// Disconnect from remote and return to local mode
+    pub fn disconnect(&mut self) {
+        self.remote_host = None;
+        self.set_info("Disconnected from remote host");
+    }
+
     /// Move selection up
     pub fn select_previous(&mut self) {
         if self.entries.is_empty() {
@@ -389,6 +451,197 @@ impl App {
     /// Request application quit
     pub fn quit(&mut self) {
         self.should_quit = true;
+    }
+}
+
+#[cfg(test)]
+mod connect_tests {
+    use super::*;
+
+    #[test]
+    fn test_enter_connect_mode() {
+        let mut app = App::new();
+        assert!(!app.connect_mode);
+        assert!(!app.connect_key_mode);
+        assert!(app.connect_input.is_empty());
+        assert!(app.connect_key_input.is_empty());
+
+        app.enter_connect_mode();
+
+        assert!(app.connect_mode);
+        assert!(!app.connect_key_mode);
+        assert!(app.connect_input.is_empty());
+        assert!(app.connect_key_input.is_empty());
+    }
+
+    #[test]
+    fn test_exit_connect_mode() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+        app.connect_key_input.push_str("/path/to/key");
+
+        app.exit_connect_mode();
+
+        assert!(!app.connect_mode);
+        assert!(!app.connect_key_mode);
+        assert!(app.connect_input.is_empty());
+        assert!(app.connect_key_input.is_empty());
+    }
+
+    #[test]
+    fn test_enter_connect_key_mode() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+
+        app.enter_connect_key_mode();
+
+        assert!(app.connect_key_mode);
+        assert!(!app.connect_input.is_empty());
+    }
+
+    #[test]
+    fn test_enter_connect_key_mode_empty_host() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        // Don't set connect_input
+
+        app.enter_connect_key_mode();
+
+        // Should not enter key mode if host is empty
+        assert!(!app.connect_key_mode);
+    }
+
+    #[test]
+    fn test_connect_push_host() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+
+        app.connect_push('u');
+        app.connect_push('s');
+        app.connect_push('e');
+        app.connect_push('r');
+
+        assert_eq!(app.connect_input, "user");
+        assert!(app.connect_key_input.is_empty());
+    }
+
+    #[test]
+    fn test_connect_push_key() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+        app.enter_connect_key_mode();
+
+        app.connect_push('/');
+        app.connect_push('p');
+        app.connect_push('a');
+        app.connect_push('t');
+        app.connect_push('h');
+
+        assert_eq!(app.connect_key_input, "/path");
+        assert_eq!(app.connect_input, "user@host");
+    }
+
+    #[test]
+    fn test_connect_pop_host() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+
+        app.connect_pop();
+
+        assert_eq!(app.connect_input, "user@hos");
+    }
+
+    #[test]
+    fn test_connect_pop_key() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+        app.enter_connect_key_mode();
+        app.connect_key_input.push_str("/path/to/key");
+
+        app.connect_pop();
+
+        assert_eq!(app.connect_key_input, "/path/to/ke");
+        assert_eq!(app.connect_input, "user@host");
+    }
+
+    #[test]
+    fn test_connect_pop_empty() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+
+        app.connect_pop(); // Should not panic
+
+        assert!(app.connect_input.is_empty());
+    }
+
+    #[test]
+    fn test_disconnect() {
+        let mut app = App::new();
+        app.set_remote_host(Some("user@host:22".to_string()));
+        assert!(app.remote_host.is_some());
+
+        app.disconnect();
+
+        assert!(app.remote_host.is_none());
+        match &app.status_message {
+            StatusMessage::Info(msg) => {
+                assert!(msg.contains("Disconnected"));
+            }
+            _ => panic!("Expected Info message"),
+        }
+    }
+
+    #[test]
+    fn test_disconnect_when_not_connected() {
+        let mut app = App::new();
+        assert!(app.remote_host.is_none());
+
+        app.disconnect(); // Should not panic
+
+        assert!(app.remote_host.is_none());
+    }
+
+    #[test]
+    fn test_connect_mode_initialization() {
+        let app = App::new();
+        assert!(!app.connect_mode);
+        assert!(!app.connect_key_mode);
+        assert!(app.connect_input.is_empty());
+        assert!(app.connect_key_input.is_empty());
+    }
+
+    #[test]
+    fn test_connect_mode_clears_on_enter() {
+        let mut app = App::new();
+        app.connect_input.push_str("old");
+        app.connect_key_input.push_str("old_key");
+
+        app.enter_connect_mode();
+
+        assert!(app.connect_input.is_empty());
+        assert!(app.connect_key_input.is_empty());
+    }
+
+    #[test]
+    fn test_connect_key_mode_goes_back_to_host() {
+        let mut app = App::new();
+        app.enter_connect_mode();
+        app.connect_input.push_str("user@host");
+        app.enter_connect_key_mode();
+        app.connect_key_input.push_str("/key");
+
+        // Simulate Esc in key mode
+        app.connect_key_mode = false;
+        app.connect_key_input.clear();
+
+        assert!(!app.connect_key_mode);
+        assert!(app.connect_key_input.is_empty());
+        assert_eq!(app.connect_input, "user@host");
     }
 }
 

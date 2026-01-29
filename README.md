@@ -1,19 +1,20 @@
 # ⚓ Lsport
 
-A TUI for managing local and remote ports via SSH. Quickly identify which process is hogging a port and kill it instantly.
+A TUI and CLI tool for managing local and remote ports via SSH. Quickly identify which process is hogging a port and kill it instantly.
 
 [![CI](https://github.com/subediparas5/lsport/actions/workflows/ci.yml/badge.svg)](https://github.com/subediparas5/lsport/actions/workflows/ci.yml)
 [![Release](https://github.com/subediparas5/lsport/actions/workflows/release.yml/badge.svg)](https://github.com/subediparas5/lsport/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/rust-1.88%2B-orange.svg)](https://www.rust-lang.org/)
 
 ## Features
 
 - 📡 **Live Port Monitor** - Real-time table displaying ports, protocols (TCP/UDP), PIDs, process names, CPU%, and memory usage
 - 🔌 **TCP & UDP Support** - Scans both TCP and UDP listening ports using multiple detection methods
 - 🌐 **Remote Monitoring** - Monitor ports on remote servers via SSH
+- 💻 **CLI Mode** - Use `describe` and `kill` commands for quick operations without TUI
 - ⌨️ **Interactive Navigation** - Vim-style navigation with arrow keys or `j`/`k`
-- 💀 **Process Termination** - Kill processes directly from the TUI with a single keystroke
+- 💀 **Process Termination** - Kill processes directly from the TUI or CLI with a single command
 - 🔍 **Regex Filtering** - Filter ports by name, PID, or port number with regex support
 - 🧟 **Zombie Detection** - Automatically highlights suspicious processes (high CPU + orphaned) in red
 - 🎨 **K9s-Inspired UI** - Beautiful dark theme with color-coded information
@@ -61,6 +62,10 @@ Download pre-built binaries from [GitHub Releases](https://github.com/subedipara
 
 ## Usage
 
+Lsport supports two modes: **TUI mode** (default) for interactive monitoring and **CLI mode** for quick operations.
+
+### TUI Mode (Default)
+
 ```bash
 # Monitor localhost (default)
 lsport
@@ -81,7 +86,63 @@ lsport --host user@example.com -i ~/.ssh/my_key
 lsport -s 5
 ```
 
+### CLI Commands
+
+#### Describe Command
+
+Get detailed information about a port or process:
+
+```bash
+# Describe a port
+lsport describe 8080
+
+# Describe a PID
+lsport describe 12345
+
+# Describe on remote server
+lsport describe -H user@example.com 8080
+
+# Use specific SSH key
+lsport describe -H user@example.com -i ~/.ssh/my_key 8080
+```
+
+**Output includes:**
+- Port number and protocol (TCP/UDP)
+- Process ID (PID)
+- Process name
+- CPU usage percentage
+- Memory usage
+- Parent process status
+- Zombie process detection
+
+#### Kill Command
+
+Kill a process by PID or port number:
+
+```bash
+# Kill process by port
+lsport kill --port 8080
+
+# Kill process by PID
+lsport kill --pid 12345
+
+# Force kill (SIGKILL instead of SIGTERM)
+lsport kill --port 8080 --force
+
+# Kill on remote server
+lsport kill --port 8080 -H user@example.com
+
+# Force kill on remote server
+lsport kill --pid 12345 -H user@example.com --force
+```
+
+**Note:**
+- You must specify either `--pid` or `--port`, but not both
+- If multiple processes are found on a port, lsport will list them and ask you to use `--pid` to specify which one to kill
+
 ### CLI Options
+
+#### Global Options (TUI Mode)
 
 | Option | Description |
 |--------|-------------|
@@ -90,6 +151,18 @@ lsport -s 5
 | `-s, --scan-interval <SECS>` | Scan interval in seconds (default: 2) |
 | `-h, --help` | Print help |
 | `-V, --version` | Print version |
+
+#### Command-Specific Options
+
+| Command | Option | Description |
+|---------|--------|-------------|
+| `describe` | `-H, --host <HOST>` | Remote host to query |
+| `describe` | `-i, --identity <PATH>` | Path to SSH private key |
+| `kill` | `--pid <PID>` | Kill process by PID (required if --port not specified) |
+| `kill` | `--port <PORT>` | Kill process by port number (required if --pid not specified) |
+| `kill` | `-H, --host <HOST>` | Remote host to query |
+| `kill` | `-i, --identity <PATH>` | Path to SSH private key |
+| `kill` | `-f, --force` | Force kill (SIGKILL instead of SIGTERM) |
 
 ### Keybindings
 
@@ -103,6 +176,8 @@ lsport -s 5
 | `End` | Go to last entry |
 | `Enter` | Kill selected process |
 | `/` | Enter filter mode (supports regex!) |
+| `c` | Connect to remote host |
+| `d` | Disconnect from remote host |
 | `?` | Toggle help popup |
 | `Esc` | Clear filter / Close help |
 | `q` | Quit |
@@ -120,14 +195,23 @@ lsport -s 5
 
 *Press the same key again to toggle ascending/descending order.*
 
-### SSH Authentication
+### Remote Connection (TUI Mode)
 
-For remote monitoring, authentication is attempted in this order:
-1. Specified key (`-i` flag)
+You can connect to a remote server directly from the TUI:
+
+1. Press `c` to enter connect mode
+2. Enter the host (format: `user@host:port` or `user@host` or `host`)
+3. Press `Enter` to optionally specify an SSH key path, or `Tab` to skip
+4. Press `Enter` again to connect
+
+**Disconnect:** Press `d` while connected to return to local monitoring.
+
+**SSH Authentication:** Authentication is attempted in this order:
+1. Specified key (if provided during connect)
 2. SSH agent (if running)
 3. Default keys: `~/.ssh/id_ed25519`, `~/.ssh/id_rsa`, `~/.ssh/id_ecdsa`
 
-### Filtering
+### Filtering (TUI Mode)
 
 Press `/` to enter filter mode. Filters support:
 
@@ -136,6 +220,31 @@ Press `/` to enter filter mode. Filters support:
 - **Case-insensitive**: All filters are case-insensitive
 
 The context bar shows "Regex:" when your filter is a valid regex pattern.
+
+### Examples
+
+```bash
+# Quick check: What's using port 8080?
+lsport describe 8080
+
+# Kill a process blocking port 3000
+lsport kill --port 3000
+
+# Kill a process by PID
+lsport kill --pid 12345
+
+# Force kill a stuck process
+lsport kill --pid 12345 --force
+
+# Check remote server
+lsport describe -H user@server.com 22
+
+# Kill process on remote server by port
+lsport kill --port 8080 -H user@server.com
+
+# Kill process on remote server by PID
+lsport kill --pid 12345 -H user@server.com --force
+```
 
 ## UI Design
 

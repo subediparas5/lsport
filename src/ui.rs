@@ -324,7 +324,30 @@ fn create_row(entry: &PortEntry, idx: usize, is_selected: bool) -> Row<'static> 
 
 /// Render the command bar at the bottom
 fn render_command_bar(frame: &mut Frame, app: &App, area: Rect) {
-    let content = if app.filter_mode {
+    let content = if app.connect_mode {
+        // Connect input mode
+        if app.connect_key_mode {
+            Line::from(vec![
+                Span::styled("SSH Key: ", Style::default().fg(COLOR_ACCENT).bold()),
+                Span::styled(&app.connect_key_input, Style::default().fg(COLOR_TEXT)),
+                Span::styled("█", Style::default().fg(COLOR_ACCENT)), // Cursor
+                Span::styled(
+                    " (Enter to connect, Tab/Esc to skip)",
+                    Style::default().fg(COLOR_TEXT_DIM),
+                ),
+            ])
+        } else {
+            Line::from(vec![
+                Span::styled("Connect: ", Style::default().fg(COLOR_ACCENT).bold()),
+                Span::styled(&app.connect_input, Style::default().fg(COLOR_TEXT)),
+                Span::styled("█", Style::default().fg(COLOR_ACCENT)), // Cursor
+                Span::styled(
+                    " (Enter for SSH key, Tab to skip, Esc to cancel)",
+                    Style::default().fg(COLOR_TEXT_DIM),
+                ),
+            ])
+        }
+    } else if app.filter_mode {
         // Filter input mode (like vim command mode)
         Line::from(vec![
             Span::styled("/", Style::default().fg(COLOR_ACCENT).bold()),
@@ -348,6 +371,8 @@ fn render_command_bar(frame: &mut Frame, app: &App, area: Rect) {
                         Span::styled(" Column ", Style::default().fg(COLOR_TEXT_DIM)),
                         Span::styled("</>", Style::default().fg(COLOR_ACCENT)),
                         Span::styled(" Filter ", Style::default().fg(COLOR_TEXT_DIM)),
+                        Span::styled("<c>", Style::default().fg(COLOR_ACCENT)),
+                        Span::styled(" Connect ", Style::default().fg(COLOR_TEXT_DIM)),
                         Span::styled("<?>", Style::default().fg(COLOR_ACCENT)),
                         Span::styled(" Help", Style::default().fg(COLOR_TEXT_DIM)),
                     ])
@@ -425,6 +450,14 @@ fn render_help_popup(frame: &mut Frame) {
         Line::from(vec![
             Span::styled("    /        ", Style::default().fg(COLOR_WARNING)),
             Span::styled("Filter (supports regex)", Style::default().fg(COLOR_TEXT)),
+        ]),
+        Line::from(vec![
+            Span::styled("    c        ", Style::default().fg(COLOR_WARNING)),
+            Span::styled("Connect to remote host", Style::default().fg(COLOR_TEXT)),
+        ]),
+        Line::from(vec![
+            Span::styled("    d        ", Style::default().fg(COLOR_WARNING)),
+            Span::styled("Disconnect from remote", Style::default().fg(COLOR_TEXT)),
         ]),
         Line::from(vec![
             Span::styled("    Esc      ", Style::default().fg(COLOR_WARNING)),

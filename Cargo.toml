@@ -19,6 +19,8 @@ exclude = [
     "tests/",
     "*.md",
     "!README.md",
+    "vendor/",
+    ".cargo/",
 ]
 
 [[bin]]

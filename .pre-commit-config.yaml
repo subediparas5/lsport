@@ -33,6 +33,57 @@ repos:
         types: [rust]
         pass_filenames: false
 
+  # Build check
+  - repo: local
+    hooks:
+      - id: cargo-build
+        name: cargo build
+        entry: cargo build --verbose
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # Documentation check
+  - repo: local
+    hooks:
+      - id: cargo-doc
+        name: cargo doc
+        entry: bash -c 'RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features'
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # Security audit
+  - repo: local
+    hooks:
+      - id: cargo-audit
+        name: cargo audit
+        entry: cargo audit
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # MSRV check
+  - repo: local
+    hooks:
+      - id: cargo-msrv
+        name: MSRV check (1.88.0)
+        entry: rustup run 1.88.0 cargo check --verbose
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # Debian build check (uses Docker test script)
+  - repo: local
+    hooks:
+      - id: debian-build
+        name: Debian build check (Docker)
+        entry: bash scripts/test-debian-docker.sh
+        language: system
+        types: [rust]
+        pass_filenames: false
+        always_run: false
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0

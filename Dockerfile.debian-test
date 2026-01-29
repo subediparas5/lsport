@@ -1,0 +1,30 @@
+FROM rust:1.88-bookworm
+
+RUN apt-get update && apt-get install -y \
+    debhelper \
+    debhelper-compat \
+    devscripts \
+    dput \
+    gnupg \
+    libssl-dev \
+    pkg-config \
+    lintian \
+    make \
+    git \
+    ca-certificates \
+    perl \
+    build-essential \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install cargo-deb (used in release workflow)
+RUN cargo install cargo-deb
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . .
+
+# Test Debian build using ci-local.sh script
+CMD ["bash", "scripts/ci-local.sh"]

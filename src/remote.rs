@@ -28,6 +28,10 @@ pub struct RemoteConfig {
 impl RemoteConfig {
     /// Parse a host string like "user@host:port" or "user@host"
     pub fn parse(host_str: &str) -> Result<Self> {
+        if host_str.trim().is_empty() {
+            return Err(anyhow!("Host cannot be empty"));
+        }
+
         let (user_host, port) = if host_str.contains(':') {
             let parts: Vec<&str> = host_str.rsplitn(2, ':').collect();
             let port: u16 = parts[0].parse().context("Invalid port number")?;
@@ -38,9 +42,16 @@ impl RemoteConfig {
 
         let (username, host) = if user_host.contains('@') {
             let parts: Vec<&str> = user_host.splitn(2, '@').collect();
-            (parts[0].to_string(), parts[1].to_string())
+            let host = parts[1].to_string();
+            if host.is_empty() {
+                return Err(anyhow!("Host cannot be empty"));
+            }
+            (parts[0].to_string(), host)
         } else {
             // Use current user
+            if user_host.is_empty() {
+                return Err(anyhow!("Host cannot be empty"));
+            }
             let username = std::env::var("USER")
                 .or_else(|_| std::env::var("USERNAME"))
                 .unwrap_or_else(|_| "root".to_string());
@@ -383,6 +394,28 @@ impl RemoteScanner {
 
         // Try SIGTERM first, then SIGKILL
         let result = self.exec(&format!("kill {} 2>&1 || kill -9 {} 2>&1", pid, pid))?;
+
+        if result.contains("No such process") {
+            return Err(anyhow!("Process {} not found", pid));
+        }
+
+        if result.contains("Operation not permitted") || result.contains("Permission denied") {
+            return Err(anyhow!(
+                "Permission denied. Try running with sudo on remote host."
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Force kill a process on the remote host (SIGKILL)
+    pub fn kill_process_force(&self, pid: u32) -> Result<()> {
+        if !self.is_connected() {
+            return Err(anyhow!("Not connected to remote host"));
+        }
+
+        // Use SIGKILL directly
+        let result = self.exec(&format!("kill -9 {} 2>&1", pid))?;
 
         if result.contains("No such process") {
             return Err(anyhow!("Process {} not found", pid));

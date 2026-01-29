@@ -298,24 +298,10 @@ jobs:
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
 
-      - name: Vendor dependencies
-        run: |
-          cargo vendor
-          mkdir -p .cargo
-          cat > .cargo/config.toml << 'EOF'
-          [source.crates-io]
-          replace-with = "vendored-sources"
-          [source.vendored-sources]
-          directory = "vendor"
-          EOF
-          for f in vendor/*/.cargo-checksum.json; do
-            sed -i 's/"files":{[^}]*}/"files":{}/' "$f"
-          done
-
       - name: Build and upload
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
+          tar --exclude='.git' --exclude='debian' --exclude='target' --exclude='vendor' --exclude='.cargo' -czf ../lsport_${VERSION}.orig.tar.gz .
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg.outputs.key_id }}"
 
           echo "--- Lintian ---"

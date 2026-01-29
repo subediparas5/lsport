@@ -2,13 +2,23 @@
 
 export CARGO_HOME = $(CURDIR)/debian/cargo
 
-# Offline build using vendored dependencies
-export CARGO_NET_OFFLINE = true
-
 %:
 	dh $@
 
 override_dh_auto_build:
+	# Generate vendor if not present (for offline builds)
+	if [ ! -d vendor ]; then \
+		cargo vendor; \
+		mkdir -p .cargo; \
+		echo '[source.crates-io]' > .cargo/config.toml; \
+		echo 'replace-with = "vendored-sources"' >> .cargo/config.toml; \
+		echo '[source.vendored-sources]' >> .cargo/config.toml; \
+		echo 'directory = "vendor"' >> .cargo/config.toml; \
+		for f in vendor/*/.cargo-checksum.json; do \
+			sed -i 's/"files":{[^}]*}/"files":{}/' "$$f" || true; \
+		done; \
+	fi
+	export CARGO_NET_OFFLINE=true
 	cargo build --release --verbose --offline
 
 override_dh_auto_install:
@@ -18,6 +28,7 @@ override_dh_auto_install:
 override_dh_auto_clean:
 	cargo clean || true
 	rm -rf $(CARGO_HOME)
+	rm -rf vendor .cargo
 
 override_dh_auto_test:
 	# Skip tests during package build

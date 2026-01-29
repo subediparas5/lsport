@@ -7,8 +7,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
 
-# Required for creating releases and uploading assets
 permissions:
   contents: write
 
@@ -21,23 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get version
+      - name: Get and verify version
         id: version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Verify version matches tag
-        run: |
           CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
-            echo "❌ Version mismatch!"
-            echo "   Cargo.toml: $CARGO_VERSION"
-            echo "   Git tag:    $TAG_VERSION"
+          if [ "$CARGO_VERSION" != "$VERSION" ]; then
+            echo "❌ Version mismatch: Cargo.toml=$CARGO_VERSION, tag=$VERSION"
             exit 1
           fi
-          echo "✅ Version $CARGO_VERSION matches tag"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Version $VERSION"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -60,21 +55,9 @@ jobs:
             curl -fsSL https://subediparas5.github.io/lsport/install.sh | bash
             ```
 
-            Or manually download the `.deb` from assets below:
-            ```bash
-            sudo dpkg -i lsport_${{ steps.version.outputs.version }}_amd64.deb
-            ```
-
             **Cargo:**
             ```bash
             cargo install lsport
-            ```
-
-            **Binary download:**
-            Download the appropriate binary for your platform below, then:
-            ```bash
-            chmod +x lsport-*
-            ./lsport-*
             ```
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
@@ -111,93 +94,88 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross-compilation tools
-        if: matrix.cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-${{ matrix.target }}
 
-      - name: Install cargo-deb
-        if: startsWith(matrix.os, 'ubuntu')
-        run: cargo install cargo-deb
+      - name: Install tools
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          fi
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            cargo install cargo-deb
+          fi
 
-      - name: Build release (native)
-        if: ${{ !matrix.cross }}
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Build release
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
 
-      - name: Build release (cross)
-        if: ${{ matrix.cross }}
-        run: cross build --release --target ${{ matrix.target }}
-
-      - name: Package binary
+      - name: Package
         run: |
           cd target/${{ matrix.target }}/release
           tar -czvf ../../../${{ matrix.artifact }}.tar.gz lsport
-          cd ../../..
 
-      - name: Build .deb package
-        if: startsWith(matrix.os, 'ubuntu') && !matrix.cross
+      - name: Build .deb
+        if: runner.os == 'Linux'
         run: |
           cargo deb --no-build --target ${{ matrix.target }}
           cp target/${{ matrix.target }}/debian/*.deb ./lsport_${{ needs.create-release.outputs.version }}_${{ matrix.deb_arch }}.deb
 
-      - name: Build .deb package (cross)
-        if: startsWith(matrix.os, 'ubuntu') && matrix.cross
-        run: |
-          cargo install cargo-deb
-          cargo deb --no-build --target ${{ matrix.target }}
-          cp target/${{ matrix.target }}/debian/*.deb ./lsport_${{ needs.create-release.outputs.version }}_${{ matrix.deb_arch }}.deb
-
-      - name: Upload Release Asset (tarball)
+      - name: Upload tarball
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ matrix.artifact }}.tar.gz
 
-      - name: Upload Release Asset (deb)
-        if: startsWith(matrix.os, 'ubuntu')
+      - name: Upload deb
+        if: runner.os == 'Linux'
         uses: softprops/action-gh-release@v2
         with:
           files: lsport_${{ needs.create-release.outputs.version }}_${{ matrix.deb_arch }}.deb
 
+      - name: Save deb artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.deb_arch }}
+          path: lsport_${{ needs.create-release.outputs.version }}_${{ matrix.deb_arch }}.deb
+          retention-days: 1
+
+  # These jobs run in parallel after build-release
   publish-crates:
     name: Publish to crates.io
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Publish to crates.io
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish --allow-dirty
 
   update-homebrew:
-    name: Update Homebrew Tap
+    name: Update Homebrew
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout homebrew-tap
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: subediparas5/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-tap
 
-      - name: Update formula tag
+      - name: Update and push
         run: |
-          cd homebrew-tap
-          # Update the tag in the formula
           sed -i 's/tag: "v[0-9]*\.[0-9]*\.[0-9]*"/tag: "${{ github.ref_name }}"/' Formula/lsport.rb
-          cat Formula/lsport.rb
-
-      - name: Commit and push
-        run: |
-          cd homebrew-tap
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/lsport.rb
-          git commit -m "Update lsport to ${{ github.ref_name }}" || echo "No changes"
+          git commit -m "Update lsport to ${{ github.ref_name }}" || true
           git push
 
   update-apt-repo:
@@ -205,24 +183,12 @@ jobs:
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Download deb artifacts
+        uses: actions/download-artifact@v4
         with:
-          ref: gh-pages
-          fetch-depth: 0
-        continue-on-error: true
-
-      - name: Create gh-pages branch if it doesn't exist
-        run: |
-          if ! git rev-parse --verify gh-pages >/dev/null 2>&1; then
-            git checkout --orphan gh-pages
-            git rm -rf . || true
-            echo "# APT Repository for lsport" > README.md
-            git add README.md
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "Initialize gh-pages branch"
-            git push origin gh-pages
-          fi
+          pattern: deb-*
+          path: debs
+          merge-multiple: true
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -230,69 +196,28 @@ jobs:
           ref: gh-pages
           path: repo
 
-      - name: Download .deb files from release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p debs
-          VERSION="${{ needs.create-release.outputs.version }}"
-
-          # Download amd64 deb
-          gh release download "${{ github.ref_name }}" \
-            --pattern "lsport_${VERSION}_amd64.deb" \
-            --dir debs \
-            --repo ${{ github.repository }} || echo "amd64 deb not found"
-
-          # Download arm64 deb
-          gh release download "${{ github.ref_name }}" \
-            --pattern "lsport_${VERSION}_arm64.deb" \
-            --dir debs \
-            --repo ${{ github.repository }} || echo "arm64 deb not found"
-
-          ls -la debs/
-
       - name: Import GPG key
         id: gpg
         run: |
           echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
-          # Auto-detect key ID from imported key
           KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
           echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
-          echo "Using GPG key: $KEY_ID"
-          # Verify key was found
-          if [ -z "$KEY_ID" ]; then
-            echo "ERROR: No GPG key found!"
-            gpg --list-secret-keys
-            exit 1
-          fi
 
-      - name: Setup APT repository structure
+      - name: Update repository
         run: |
           cd repo
           mkdir -p pool/main dists/stable/main/binary-amd64 dists/stable/main/binary-arm64
-
-          # Copy new .deb files
           cp ../debs/*.deb pool/main/ 2>/dev/null || true
-
-          # Export public key
           gpg --armor --export "${{ steps.gpg.outputs.key_id }}" > KEY.gpg
 
-      - name: Generate Packages files
-        run: |
-          cd repo
-
-          # Generate Packages for amd64
+          # Generate Packages
           dpkg-scanpackages --arch amd64 pool/main /dev/null > dists/stable/main/binary-amd64/Packages 2>/dev/null || true
-          gzip -k -f dists/stable/main/binary-amd64/Packages
-
-          # Generate Packages for arm64
           dpkg-scanpackages --arch arm64 pool/main /dev/null > dists/stable/main/binary-arm64/Packages 2>/dev/null || true
+          gzip -k -f dists/stable/main/binary-amd64/Packages
           gzip -k -f dists/stable/main/binary-arm64/Packages
 
-      - name: Generate Release file
-        run: |
-          cd repo/dists/stable
-
+          # Generate Release
+          cd dists/stable
           cat > Release << EOF
           Origin: lsport
           Label: lsport
@@ -302,93 +227,34 @@ jobs:
           Components: main
           Description: APT repository for lsport
           EOF
-
-          # Add checksums
           apt-ftparchive release . >> Release
 
-      - name: Sign Release file
-        run: |
-          cd repo/dists/stable
-
-          # Remove existing signed files
+          # Sign
           rm -f InRelease Release.gpg
+          gpg --batch --yes --pinentry-mode loopback --clearsign --default-key "${{ steps.gpg.outputs.key_id }}" -o InRelease Release
+          gpg --batch --yes --pinentry-mode loopback --default-key "${{ steps.gpg.outputs.key_id }}" -abs -o Release.gpg Release
 
-          # Create InRelease (inline signed)
-          gpg --batch --yes --pinentry-mode loopback \
-            --clearsign \
-            --default-key "${{ steps.gpg.outputs.key_id }}" \
-            -o InRelease Release
-
-          # Create Release.gpg (detached signature)
-          gpg --batch --yes --pinentry-mode loopback \
-            --default-key "${{ steps.gpg.outputs.key_id }}" \
-            -abs -o Release.gpg Release
-
-      - name: Create installation script
+      - name: Create install script
         run: |
           cd repo
           cat > install.sh << 'EOF'
           #!/bin/bash
           set -e
-
-          echo "Installing lsport APT repository..."
-
-          # Download and install GPG key
+          echo "Installing lsport..."
           curl -fsSL https://subediparas5.github.io/lsport/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/lsport.gpg
-
-          # Add repository
           echo "deb [signed-by=/usr/share/keyrings/lsport.gpg arch=$(dpkg --print-architecture)] https://subediparas5.github.io/lsport stable main" | sudo tee /etc/apt/sources.list.d/lsport.list
-
-          # Update and install
-          sudo apt update
-          sudo apt install -y lsport
-
-          echo "✅ lsport installed successfully!"
+          sudo apt update && sudo apt install -y lsport
+          echo "✅ lsport installed!"
           EOF
           chmod +x install.sh
 
-      - name: Update README
-        run: |
-          cd repo
-          cat > README.md << 'EOF'
-          # lsport APT Repository
-
-          APT repository for [lsport](https://github.com/subediparas5/lsport) - A TUI for managing local and remote ports via SSH.
-
-          ## Quick Install
-
-          ```bash
-          curl -fsSL https://subediparas5.github.io/lsport/install.sh | bash
-          ```
-
-          ## Manual Install
-
-          ```bash
-          # Add GPG key
-          curl -fsSL https://subediparas5.github.io/lsport/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/lsport.gpg
-
-          # Add repository
-          echo "deb [signed-by=/usr/share/keyrings/lsport.gpg arch=$(dpkg --print-architecture)] https://subediparas5.github.io/lsport stable main" | sudo tee /etc/apt/sources.list.d/lsport.list
-
-          # Install
-          sudo apt update
-          sudo apt install lsport
-          ```
-
-          ## Update
-
-          ```bash
-          sudo apt update && sudo apt upgrade lsport
-          ```
-          EOF
-
-      - name: Commit and push
+      - name: Push
         run: |
           cd repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Update APT repository for ${{ github.ref_name }}" || echo "No changes to commit"
+          git commit -m "Update APT repo for ${{ github.ref_name }}" || true
           git push origin gh-pages
 
   upload-debian-mentors:
@@ -398,28 +264,21 @@ jobs:
     container:
       image: rust:latest
     steps:
-      - name: Install Debian packaging tools
+      - name: Install tools
         run: |
           apt-get update
-          apt-get install -y debhelper devscripts dput gnupg libssl-dev pkg-config
-          rustc --version
+          apt-get install -y debhelper devscripts dput gnupg libssl-dev pkg-config lintian
 
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Import GPG key
-        id: gpg_debian
+        id: gpg
         run: |
           echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
-          # Auto-detect key ID
           KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d':' -f5)
           echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
-          echo "Using GPG key: $KEY_ID"
-          if [ -z "$KEY_ID" ]; then
-            echo "ERROR: No GPG key found!"
-            exit 1
-          fi
 
       - name: Configure Git
         run: |
@@ -427,7 +286,7 @@ jobs:
           git config --global user.email "subediparas5@gmail.com"
           git config --global --add safe.directory /__w/lsport/lsport
 
-      - name: Update changelog version
+      - name: Update changelog
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
           cat > debian/changelog << EOF
@@ -443,34 +302,25 @@ jobs:
         run: |
           cargo vendor
           mkdir -p .cargo
-          cat > .cargo/config.toml << 'CARGO_EOF'
+          cat > .cargo/config.toml << 'EOF'
           [source.crates-io]
           replace-with = "vendored-sources"
-
           [source.vendored-sources]
           directory = "vendor"
-          CARGO_EOF
-          # Fix checksum files to avoid missing file errors
+          EOF
           for f in vendor/*/.cargo-checksum.json; do
             sed -i 's/"files":{[^}]*}/"files":{}/' "$f"
           done
 
-      - name: Build source package
+      - name: Build and upload
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
           tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
-          dpkg-buildpackage -S -sa -d -k"${{ steps.gpg_debian.outputs.key_id }}"
+          dpkg-buildpackage -S -sa -d -k"${{ steps.gpg.outputs.key_id }}"
 
-      - name: Run lintian on source package
-        run: |
-          apt-get install -y lintian
-          VERSION="${{ needs.create-release.outputs.version }}"
-          echo "--- Running lintian on source package ---"
-          lintian --info --display-info ../lsport_${VERSION}-1.dsc || true
-          echo "--- Lintian check complete ---"
+          echo "--- Lintian ---"
+          lintian --info ../lsport_${VERSION}-1.dsc || true
 
-      - name: Configure dput
-        run: |
           cat > ~/.dput.cf << EOF
           [mentors]
           fqdn = mentors.debian.net
@@ -479,24 +329,16 @@ jobs:
           allow_unsigned_uploads = 0
           EOF
 
-      - name: Upload to mentors.debian.net
-        run: |
-          VERSION="${{ needs.create-release.outputs.version }}"
           cd ..
           dput mentors lsport_${VERSION}-1_source.changes
-
-      - name: Copy artifacts to workspace
-        run: |
-          VERSION="${{ needs.create-release.outputs.version }}"
-          mkdir -p debian-artifacts
-          cp ../lsport_${VERSION}.orig.tar.gz debian-artifacts/
-          cp ../lsport_${VERSION}-1.debian.tar.xz debian-artifacts/
-          cp ../lsport_${VERSION}-1.dsc debian-artifacts/
-          cp ../lsport_${VERSION}-1_source.changes debian-artifacts/
-          cp ../lsport_${VERSION}-1_source.buildinfo debian-artifacts/ || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: debian-source-package
-          path: debian-artifacts/
+          path: |
+            ../*.orig.tar.gz
+            ../*.debian.tar.xz
+            ../*.dsc
+            ../*.changes
+          retention-days: 7

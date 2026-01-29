@@ -5,7 +5,7 @@
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style, Stylize},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
     Frame,
@@ -223,7 +223,7 @@ fn render_table(frame: &mut Frame, app: &App, area: Rect) {
                 .border_style(Style::default().fg(COLOR_BORDER))
                 .style(Style::default().bg(COLOR_BG)),
         )
-        .highlight_style(
+        .row_highlight_style(
             Style::default()
                 .bg(COLOR_SELECTED_BG)
                 .fg(COLOR_TEXT)

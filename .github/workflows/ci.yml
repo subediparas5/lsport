@@ -85,17 +85,17 @@ jobs:
 
   # MSRV check - only on ubuntu, skip beta
   msrv:
-    name: MSRV (1.85.0)
+    name: MSRV (1.88.0)
     needs: check
     if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust 1.85.0
+      - name: Install Rust 1.88.0
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.85.0"
+          toolchain: "1.88.0"
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2

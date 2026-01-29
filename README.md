@@ -152,7 +152,7 @@ Lsport features a **k9s-inspired** terminal UI with:
 
 ### Prerequisites
 
-- Rust 1.85.0 or later
+- Rust 1.88.0 or later
 - OpenSSL development libraries (for SSH support)
 
 ### Setup

@@ -289,14 +289,30 @@ jobs:
       - name: Update changelog
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          cat > debian/changelog << EOF
+          echo "Creating changelog for version: ${VERSION}"
+          if [ -f debian/changelog ]; then
+            # Prepend to existing changelog
+            cat > debian/changelog.new << EOF
           lsport (${VERSION}-1) unstable; urgency=medium
 
-            * Initial release (Closes: #1126589)
+            * Release version ${VERSION}
             * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
 
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
+            cat debian/changelog >> debian/changelog.new
+            mv debian/changelog.new debian/changelog
+          else
+            # Create new changelog
+            cat > debian/changelog << EOF
+          lsport (${VERSION}-1) unstable; urgency=medium
+
+            * Release version ${VERSION} (RFS: #1126589)
+            * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
+
+           -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
+          EOF
+          fi
 
       - name: Build and upload
         run: |

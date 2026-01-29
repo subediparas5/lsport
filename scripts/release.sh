@@ -77,9 +77,17 @@ echo ""
 echo "This will:"
 echo "  1. Update version in Cargo.toml to $NEW_VERSION"
 echo "  2. Update Cargo.lock"
-echo "  3. Commit changes"
-echo "  4. Create tag v$NEW_VERSION"
-echo "  5. Push to origin"
+echo "  3. Update debian/changelog"
+if [ -f "debian/lsport.1" ]; then
+    echo "  4. Update debian/lsport.1 version"
+    echo "  5. Commit changes"
+    echo "  6. Create tag v$NEW_VERSION"
+    echo "  7. Push to origin"
+else
+    echo "  4. Commit changes"
+    echo "  5. Create tag v$NEW_VERSION"
+    echo "  6. Push to origin"
+fi
 echo ""
 read -p "Proceed? (y/N) " -n 1 -r
 echo
@@ -110,9 +118,23 @@ lsport (${NEW_VERSION}-1) unstable; urgency=medium
  -- ${GIT_NAME} <${GIT_EMAIL}>  $(date -R)
 EOF
 
+# Update manual page version
+if [ -f "debian/lsport.1" ]; then
+    echo -e "${YELLOW}Updating debian/lsport.1 version...${NC}"
+    CURRENT_MONTH=$(date +"%B %Y")
+    # Update version in .TH line: .TH LSPORT 1 "January 2026" "lsport 0.3.4" "User Commands"
+    sed -i.bak "s/\"lsport [0-9]\+\.[0-9]\+\.[0-9]\+\"/\"lsport ${NEW_VERSION}\"/" debian/lsport.1
+    # Update date to current month/year
+    sed -i.bak "s/\"[A-Za-z]* [0-9]\{4\}\"/\"${CURRENT_MONTH}\"/" debian/lsport.1
+    rm -f debian/lsport.1.bak
+fi
+
 # Commit
 echo -e "${YELLOW}Committing...${NC}"
 git add Cargo.toml Cargo.lock debian/changelog
+if [ -f "debian/lsport.1" ]; then
+    git add debian/lsport.1
+fi
 git commit -m "chore: release v$NEW_VERSION"
 
 # Tag

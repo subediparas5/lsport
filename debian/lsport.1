@@ -1,18 +1,40 @@
-.TH LSPORT 1 "January 2026" "lsport 0.2.10" "User Commands"
+.TH LSPORT 1 "January 2026" "lsport 0.3.4" "User Commands"
 .SH NAME
-lsport \- TUI for managing local and remote ports via SSH
+lsport \- TUI and CLI tool for managing local and remote ports via SSH
 .SH SYNOPSIS
 .B lsport
 [\fIOPTIONS\fR]
+.br
+.B lsport describe
+[\fIOPTIONS\fR] \fIPORT_OR_PID\fR
+.br
+.B lsport kill
+[\fIOPTIONS\fR] [\fB\-\-pid\fR \fIPID\fR | \fB\-\-port\fR \fIPORT\fR]
 .SH DESCRIPTION
 .B lsport
-is a fast, interactive terminal user interface for managing ports on local
-and remote machines via SSH. It allows you to quickly identify which process
-is using a port and kill it with a single keystroke.
+is a fast, interactive terminal user interface (TUI) and command-line tool
+for managing ports on local and remote machines via SSH. It allows you to
+quickly identify which process is using a port and kill it with a single keystroke.
 .PP
-Features include live port monitoring with real-time updates, TCP and UDP
-support, remote server monitoring via SSH, Vim-style navigation, process
-termination, regex filtering, and a k9s-inspired dark theme UI.
+Features include:
+.IP \(bu 4
+Live port monitoring with real-time updates
+.IP \(bu 4
+TCP and UDP support with multiple detection methods
+.IP \(bu 4
+Remote server monitoring via SSH
+.IP \(bu 4
+CLI mode with describe and kill commands
+.IP \(bu 4
+Vim-style navigation with keyboard shortcuts
+.IP \(bu 4
+Process termination with a single keystroke
+.IP \(bu 4
+Regex filtering for ports, PIDs, and process names
+.IP \(bu 4
+Zombie process detection with visual highlighting
+.IP \(bu 4
+K9s-inspired dark theme UI with color-coded information
 .SH OPTIONS
 .TP
 .BR \-H ", " \-\-host " " \fIHOST\fR
@@ -30,6 +52,39 @@ Print help information.
 .TP
 .BR \-V ", " \-\-version
 Print version information.
+.SH CLI COMMANDS
+.TP
+.B describe \fIPORT_OR_PID\fR
+Get detailed information about a port or process by port number or PID.
+Output includes port number, protocol, PID, process name, CPU usage,
+memory usage, parent process status, and zombie process detection.
+.TP
+.B kill
+Kill a process by PID or port number. Requires either \fB\-\-pid\fR or
+\fB\-\-port\fR to be specified.
+.SS Describe Command Options
+.TP
+.BR \-H ", " \-\-host " " \fIHOST\fR
+Remote host to query. Format: \fIuser@host:port\fR or \fIuser@host\fR or \fIhost\fR.
+.TP
+.BR \-i ", " \-\-identity " " \fIPATH\fR
+Path to SSH private key. If not specified, uses ssh-agent or default keys.
+.SS Kill Command Options
+.TP
+.BR \-\-pid " " \fIPID\fR
+Kill process by PID.
+.TP
+.BR \-\-port " " \fIPORT\fR
+Kill process by port number.
+.TP
+.BR \-H ", " \-\-host " " \fIHOST\fR
+Remote host to query. Format: \fIuser@host:port\fR or \fIuser@host\fR or \fIhost\fR.
+.TP
+.BR \-i ", " \-\-identity " " \fIPATH\fR
+Path to SSH private key. If not specified, uses ssh-agent or default keys.
+.TP
+.BR \-f ", " \-\-force
+Force kill using SIGKILL instead of SIGTERM.
 .SH KEYBINDINGS
 .SS Navigation
 .TP
@@ -106,6 +161,27 @@ Use a specific SSH key:
 .TP
 Custom scan interval (5 seconds):
 .B lsport \-s 5
+.TP
+Describe a port:
+.B lsport describe 8080
+.TP
+Describe a PID:
+.B lsport describe 12345
+.TP
+Describe on remote server:
+.B lsport describe \-H user@example.com 8080
+.TP
+Kill process by port:
+.B lsport kill \-\-port 8080
+.TP
+Kill process by PID:
+.B lsport kill \-\-pid 12345
+.TP
+Force kill a process:
+.B lsport kill \-\-port 8080 \-\-force
+.TP
+Kill on remote server:
+.B lsport kill \-\-port 8080 \-H user@example.com
 .SH SSH AUTHENTICATION
 For remote monitoring, authentication is attempted in this order:
 .IP 1. 4

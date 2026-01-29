@@ -12,16 +12,18 @@ Rules-Requires-Root: no
 Package: lsport
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: TUI for managing local and remote ports via SSH
- Lsport is a terminal user interface application for managing ports
- on local and remote machines. It allows you to quickly identify
- which process is using a port and kill it instantly.
+Description: TUI and CLI tool for managing local and remote ports via SSH
+ Lsport is a fast, interactive terminal user interface (TUI) and command-line
+ tool for managing ports on local and remote machines via SSH. It allows you
+ to quickly identify which process is using a port and kill it instantly.
  .
  Features include:
   - Live port monitoring with real-time updates
-  - TCP and UDP support
+  - TCP and UDP support with multiple detection methods
   - Remote server monitoring via SSH
-  - Vim-style navigation
+  - CLI mode with describe and kill commands
+  - Vim-style navigation with keyboard shortcuts
   - Process termination with a single keystroke
-  - Regex filtering
-  - K9s-inspired dark theme UI
+  - Regex filtering for ports, PIDs, and process names
+  - Zombie process detection with visual highlighting
+  - K9s-inspired dark theme UI with color-coded information

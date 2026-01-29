@@ -1,13 +1,13 @@
 Package: lsport
-Version: 0.3.2-1
+Version: 0.3.3-1
 Architecture: arm64
 Maintainer: Paras Subedi <subediparas5@gmail.com>
-Installed-Size: 6430
-Filename: pool/main/lsport_0.3.2_arm64.deb
-Size: 2361252
-MD5sum: a9f62e8ce96f9474a52bfc1f0eaabf1e
-SHA1: ad1a94618ed2313c8cfed0b96244c1bd8cfab8b5
-SHA256: 9f34a6ccf904680debe6351c5900d66922c22eca9fc94874a29f98364c6c0dc4
+Installed-Size: 6438
+Filename: pool/main/lsport_0.3.3_arm64.deb
+Size: 2361432
+MD5sum: dcd428493c3b62ec033d92941c6efed7
+SHA1: 500039a2c2e68ba5f1600be5bed35494df021bf7
+SHA256: 265e2698ee8a7b2bfe54f66d27948d9b3a195f59e2fd81285d55dc04df963ce8
 Section: utils
 Priority: optional
 Homepage: https://github.com/subediparas5/lsport

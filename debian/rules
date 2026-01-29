@@ -13,6 +13,7 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	install -D -m 755 target/release/lsport debian/lsport/usr/bin/lsport
+	install -D -m 644 debian/lsport.1 debian/lsport/usr/share/man/man1/lsport.1
 
 override_dh_auto_clean:
 	cargo clean || true

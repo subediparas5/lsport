@@ -1,0 +1,135 @@
+.TH LSPORT 1 "January 2026" "lsport 0.2.10" "User Commands"
+.SH NAME
+lsport \- TUI for managing local and remote ports via SSH
+.SH SYNOPSIS
+.B lsport
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.B lsport
+is a fast, interactive terminal user interface for managing ports on local
+and remote machines via SSH. It allows you to quickly identify which process
+is using a port and kill it with a single keystroke.
+.PP
+Features include live port monitoring with real-time updates, TCP and UDP
+support, remote server monitoring via SSH, Vim-style navigation, process
+termination, regex filtering, and a k9s-inspired dark theme UI.
+.SH OPTIONS
+.TP
+.BR \-H ", " \-\-host " " \fIHOST\fR
+Remote host to monitor. Format: \fIuser@host:port\fR or \fIuser@host\fR or \fIhost\fR.
+.TP
+.BR \-i ", " \-\-identity " " \fIPATH\fR
+Path to SSH private key. If not specified, uses ssh-agent or default keys
+(~/.ssh/id_ed25519, ~/.ssh/id_rsa, ~/.ssh/id_ecdsa).
+.TP
+.BR \-s ", " \-\-scan\-interval " " \fISECS\fR
+Scan interval in seconds. Default is 2.
+.TP
+.BR \-h ", " \-\-help
+Print help information.
+.TP
+.BR \-V ", " \-\-version
+Print version information.
+.SH KEYBINDINGS
+.SS Navigation
+.TP
+.BR \(ua " / " k
+Move selection up.
+.TP
+.BR \(da " / " j
+Move selection down.
+.TP
+.B PgUp
+Move up 10 rows.
+.TP
+.B PgDn
+Move down 10 rows.
+.TP
+.B Home
+Go to first entry.
+.TP
+.B End
+Go to last entry.
+.SS Actions
+.TP
+.B Enter
+Kill selected process.
+.TP
+.B /
+Enter filter mode (supports regex).
+.TP
+.B ?
+Toggle help popup.
+.TP
+.B Esc
+Clear filter or close help.
+.TP
+.B q
+Quit.
+.SS Sorting (K9s-style)
+.TP
+.BR Shift+P " / " 1
+Sort by Port.
+.TP
+.BR Shift+O " / " 2
+Sort by Protocol.
+.TP
+.BR Shift+I " / " 3
+Sort by PID.
+.TP
+.BR Shift+N " / " 4
+Sort by Name.
+.TP
+.BR Shift+C " / " 5
+Sort by CPU %.
+.TP
+.BR Shift+M " / " 6
+Sort by Memory.
+.PP
+Press the same key again to toggle ascending/descending order.
+.SH EXAMPLES
+.TP
+Monitor localhost:
+.B lsport
+.TP
+Monitor with sudo (needed for killing system processes):
+.B sudo lsport
+.TP
+Monitor a remote server via SSH:
+.B lsport \-\-host user@example.com
+.TP
+Remote server with custom SSH port:
+.B lsport \-\-host user@example.com:2222
+.TP
+Use a specific SSH key:
+.B lsport \-\-host user@example.com \-i ~/.ssh/my_key
+.TP
+Custom scan interval (5 seconds):
+.B lsport \-s 5
+.SH SSH AUTHENTICATION
+For remote monitoring, authentication is attempted in this order:
+.IP 1. 4
+Specified key (\fB\-i\fR flag)
+.IP 2. 4
+SSH agent (if running)
+.IP 3. 4
+Default keys: ~/.ssh/id_ed25519, ~/.ssh/id_rsa, ~/.ssh/id_ecdsa
+.SH FILTERING
+Press \fB/\fR to enter filter mode. Filters support:
+.IP \(bu 4
+Simple text: \fBnode\fR matches any entry containing "node"
+.IP \(bu 4
+Regex patterns: \fB^80[0-9]{2}$\fR matches ports 8000-8099
+.IP \(bu 4
+All filters are case-insensitive
+.SH AUTHOR
+Written by Paras Subedi <subediparas5@gmail.com>.
+.SH REPORTING BUGS
+Report bugs at: https://github.com/subediparas5/lsport/issues
+.SH COPYRIGHT
+Copyright \(co 2024-2026 Paras Subedi. License MIT.
+.SH SEE ALSO
+.BR netstat (8),
+.BR ss (8),
+.BR lsof (8),
+.BR fuser (1)

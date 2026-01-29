@@ -433,7 +433,7 @@ jobs:
           cat > debian/changelog << EOF
           lsport (${VERSION}-1) unstable; urgency=medium
 
-            * Release version ${VERSION}
+            * Initial release (Closes: #1126589)
             * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
 
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
@@ -450,12 +450,24 @@ jobs:
           [source.vendored-sources]
           directory = "vendor"
           CARGO_EOF
+          # Fix checksum files to avoid missing file errors
+          for f in vendor/*/.cargo-checksum.json; do
+            sed -i 's/"files":{[^}]*}/"files":{}/' "$f"
+          done
 
       - name: Build source package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
           tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg_debian.outputs.key_id }}"
+
+      - name: Run lintian on source package
+        run: |
+          apt-get install -y lintian
+          VERSION="${{ needs.create-release.outputs.version }}"
+          echo "--- Running lintian on source package ---"
+          lintian --info --display-info ../lsport_${VERSION}-1.dsc || true
+          echo "--- Lintian check complete ---"
 
       - name: Configure dput
         run: |

@@ -1,7 +1,7 @@
 Source: lsport
 Section: utils
 Priority: optional
-Maintainer: Paras Subedi <subediparas5@gmail.com>
+Maintainer: Parash Subedi <subediparas5@gmail.com>
 Build-Depends: debhelper-compat (= 13), cargo, rustc (>= 1.88)
 Standards-Version: 4.7.3
 Homepage: https://github.com/subediparas5/lsport

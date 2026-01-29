@@ -1,10 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: lsport
-Upstream-Contact: Paras Subedi <subediparas5@gmail.com>
+Upstream-Contact: Parash Subedi <subediparas5@gmail.com>
 Source: https://github.com/subediparas5/lsport
 
 Files: *
-Copyright: 2024-2026 Paras Subedi <subediparas5@gmail.com>
+Copyright: 2024-2026 Parash Subedi <subediparas5@gmail.com>
 License: MIT
 
 License: MIT

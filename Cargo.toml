@@ -83,8 +83,8 @@ all = { level = "warn", priority = -1 }
 
 # Debian package configuration (for cargo-deb)
 [package.metadata.deb]
-maintainer = "Paras Subedi <subediparas5@gmail.com>"
-copyright = "2024-2026, Paras Subedi"
+maintainer = "Parash Subedi <subediparas5@gmail.com>"
+copyright = "2024-2026, Parash Subedi"
 license-file = ["LICENSE", "0"]
 extended-description = """
 A fast, interactive TUI for managing local and remote ports via SSH.

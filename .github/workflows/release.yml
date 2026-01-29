@@ -286,7 +286,7 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.name "Paras Subedi"
+          git config --global user.name "Parash Subedi"
           git config --global user.email "subediparas5@gmail.com"
           git config --global --add safe.directory /__w/lsport/lsport
 
@@ -307,7 +307,7 @@ jobs:
             * Release version ${VERSION}
             * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
 
-           -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
+           -- Parash Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
               cat debian/changelog >> debian/changelog.new
               mv debian/changelog.new debian/changelog
@@ -321,7 +321,7 @@ jobs:
             * Release version ${VERSION}
             * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
 
-           -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
+           -- Parash Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
           fi
 

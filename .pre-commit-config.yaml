@@ -1,5 +1,5 @@
 # Pre-commit hooks for Lsport
-# Install: pip install pre-commit && pre-commit install
+# Install: pip install pre-commit && pre-commit install --hook-type pre-commit
 # Run manually: pre-commit run --all-files
 
 repos:

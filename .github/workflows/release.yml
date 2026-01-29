@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,13 +27,15 @@ jobs:
         id: version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          TAG="${GITHUB_REF_NAME}"
           CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           if [ "$CARGO_VERSION" != "$VERSION" ]; then
             echo "❌ Version mismatch: Cargo.toml=$CARGO_VERSION, tag=$VERSION"
             exit 1
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "✅ Version $VERSION"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "✅ Version $VERSION (tag: $TAG)"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -271,6 +274,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.create-release.outputs.tag }}
           fetch-depth: 0
 
       - name: Import GPG key
@@ -289,10 +293,15 @@ jobs:
       - name: Update changelog
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          echo "Creating changelog for version: ${VERSION}"
+          echo "Checking changelog for version: ${VERSION}"
           if [ -f debian/changelog ]; then
-            # Prepend to existing changelog
-            cat > debian/changelog.new << EOF
+            # Check if changelog already has the correct version at the top
+            if head -1 debian/changelog | grep -q "lsport (${VERSION}-1)"; then
+              echo "Changelog already has version ${VERSION}, skipping update"
+            else
+              # Prepend to existing changelog
+              echo "Prepending new changelog entry for version ${VERSION}"
+              cat > debian/changelog.new << EOF
           lsport (${VERSION}-1) unstable; urgency=medium
 
             * Release version ${VERSION}
@@ -300,14 +309,16 @@ jobs:
 
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
-            cat debian/changelog >> debian/changelog.new
-            mv debian/changelog.new debian/changelog
+              cat debian/changelog >> debian/changelog.new
+              mv debian/changelog.new debian/changelog
+            fi
           else
             # Create new changelog
+            echo "Creating new changelog for version ${VERSION}"
             cat > debian/changelog << EOF
           lsport (${VERSION}-1) unstable; urgency=medium
 
-            * Release version ${VERSION} (RFS: #1126589)
+            * Release version ${VERSION}
             * See https://github.com/subediparas5/lsport/releases/tag/v${VERSION}
 
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
@@ -332,7 +343,13 @@ jobs:
           EOF
 
           cd ..
-          dput mentors lsport_${VERSION}-1_source.changes
+          echo "Uploading lsport_${VERSION}-1_source.changes to Debian Mentors..."
+          if dput mentors lsport_${VERSION}-1_source.changes; then
+            echo "✅ Successfully uploaded version ${VERSION} to Debian Mentors"
+          else
+            echo "❌ Failed to upload to Debian Mentors"
+            exit 1
+          fi
 
       - name: Copy artifacts to workspace
         run: |

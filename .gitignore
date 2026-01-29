@@ -2,8 +2,11 @@
 /target/
 **/*.rs.bk
 
-# Vendored dependencies (generated, not tracked)
+# Vendored dependencies (generated for Debian builds, not tracked)
 /vendor/
+
+# Cargo config for vendored builds (generated during Debian package build)
+/.cargo/
 
 # IDE
 .idea/

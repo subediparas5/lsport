@@ -2,6 +2,9 @@
 /target/
 **/*.rs.bk
 
+# Vendored dependencies (generated, not tracked)
+/vendor/
+
 # IDE
 .idea/
 .vscode/

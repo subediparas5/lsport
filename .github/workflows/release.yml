@@ -439,10 +439,22 @@ jobs:
            -- Paras Subedi <subediparas5@gmail.com>  $(date -R)
           EOF
 
+      - name: Vendor dependencies
+        run: |
+          cargo vendor
+          mkdir -p .cargo
+          cat > .cargo/config.toml << 'CARGO_EOF'
+          [source.crates-io]
+          replace-with = "vendored-sources"
+
+          [source.vendored-sources]
+          directory = "vendor"
+          CARGO_EOF
+
       - name: Build source package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          tar --exclude='.git' --exclude='debian' -czf ../lsport_${VERSION}.orig.tar.gz .
+          tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg_debian.outputs.key_id }}"
 
       - name: Configure dput

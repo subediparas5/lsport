@@ -265,12 +265,12 @@ jobs:
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     container:
-      image: rust:latest
+      image: rust:1.88-bookworm
     steps:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y debhelper devscripts dput gnupg libssl-dev pkg-config lintian
+          apt-get install -y debhelper devscripts dput gnupg libssl-dev libssh2-1-dev zlib1g-dev pkg-config lintian
 
       - uses: actions/checkout@v4
         with:
@@ -325,10 +325,27 @@ jobs:
           EOF
           fi
 
+      - name: Vendor dependencies for offline build
+        run: |
+          echo "Vendoring Cargo dependencies for offline Debian build..."
+          cargo vendor vendor
+
+          # Create .cargo/config.toml to use vendored sources
+          mkdir -p .cargo
+          printf '%s\n' '[source.crates-io]' 'replace-with = "vendored-sources"' '' '[source.vendored-sources]' 'directory = "vendor"' > .cargo/config.toml
+
+          # Clear checksums for Debian compatibility (source may be modified)
+          for f in vendor/*/.cargo-checksum.json; do
+            sed -i 's/"files":{[^}]*}/"files":{}/' "$f" || true
+          done
+
+          echo "✅ Vendored $(ls -d vendor/*/ | wc -l) crates"
+
       - name: Build and upload
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          tar --exclude='.git' --exclude='debian' --exclude='target' --exclude='vendor' --exclude='.cargo' -czf ../lsport_${VERSION}.orig.tar.gz .
+          # Include vendor and .cargo in orig.tar.gz for offline builds
+          tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg.outputs.key_id }}"
 
           echo "--- Lintian ---"

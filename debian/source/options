@@ -1,2 +1,2 @@
-tar-ignore = "vendor/"
-tar-ignore = ".cargo/"
+# Do NOT ignore vendor/ and .cargo/ - they are required for offline builds
+# per Debian Rust Team requirements: https://rust-team.pages.debian.net/book/

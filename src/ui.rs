@@ -270,7 +270,7 @@ fn create_row(entry: &PortEntry, idx: usize, is_selected: bool) -> Row<'static> 
     // Alternating row background
     let row_bg = if is_selected {
         COLOR_SELECTED_BG
-    } else if idx % 2 == 0 {
+    } else if idx.is_multiple_of(2) {
         COLOR_BG
     } else {
         COLOR_ROW_ALT

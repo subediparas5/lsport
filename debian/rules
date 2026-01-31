@@ -1,25 +1,30 @@
 #!/usr/bin/make -f
 
+# Debian Rust Team offline build compliance
+# See: https://rust-team.pages.debian.net/book/
+
 export CARGO_HOME = $(CURDIR)/debian/cargo
+export CARGO_NET_OFFLINE = true
+# Use system OpenSSL instead of vendored openssl-src
+export OPENSSL_NO_VENDOR = 1
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	# Generate vendor if not present (for offline builds)
-	if [ ! -d vendor ]; then \
-		cargo vendor; \
-		mkdir -p .cargo; \
-		echo '[source.crates-io]' > .cargo/config.toml; \
-		echo 'replace-with = "vendored-sources"' >> .cargo/config.toml; \
-		echo '[source.vendored-sources]' >> .cargo/config.toml; \
-		echo 'directory = "vendor"' >> .cargo/config.toml; \
-		for f in vendor/*/.cargo-checksum.json; do \
-			sed -i 's/"files":{[^}]*}/"files":{}/' "$$f" || true; \
-		done; \
+	# Verify vendored dependencies are present (required for offline builds)
+	@if [ ! -d vendor ]; then \
+		echo "ERROR: vendor directory not found!"; \
+		echo "The source tarball must include vendored dependencies for offline builds."; \
+		echo "See: https://rust-team.pages.debian.net/book/"; \
+		exit 1; \
 	fi
-	export CARGO_NET_OFFLINE=true
-	cargo build --release --verbose --offline
+	@if [ ! -f .cargo/config.toml ]; then \
+		echo "ERROR: .cargo/config.toml not found!"; \
+		echo "The source tarball must include cargo config for vendored sources."; \
+		exit 1; \
+	fi
+	cargo build --release --frozen --offline
 
 override_dh_auto_install:
 	install -D -m 755 target/release/lsport debian/lsport/usr/bin/lsport
@@ -28,7 +33,6 @@ override_dh_auto_install:
 override_dh_auto_clean:
 	cargo clean || true
 	rm -rf $(CARGO_HOME)
-	rm -rf vendor .cargo
 
 override_dh_auto_test:
-	# Skip tests during package build
+	# Skip tests during package build - requires network for some deps

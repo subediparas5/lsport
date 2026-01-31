@@ -2,7 +2,13 @@ Source: lsport
 Section: utils
 Priority: optional
 Maintainer: Parash Subedi <subediparas5@gmail.com>
-Build-Depends: debhelper-compat (= 13), cargo, rustc (>= 1.88)
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc (>= 1.88),
+               libssl-dev,
+               libssh2-1-dev,
+               zlib1g-dev,
+               pkg-config
 Standards-Version: 4.7.3
 Homepage: https://github.com/subediparas5/lsport
 Vcs-Browser: https://github.com/subediparas5/lsport

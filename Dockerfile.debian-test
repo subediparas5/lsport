@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     dput \
     gnupg \
     libssl-dev \
+    libssh2-1-dev \
+    zlib1g-dev \
     pkg-config \
     lintian \
     make \
@@ -14,11 +16,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     perl \
     build-essential \
-    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Install cargo-deb (used in release workflow)
-RUN cargo install cargo-deb
 
 # Set working directory
 WORKDIR /workspace
@@ -26,5 +24,36 @@ WORKDIR /workspace
 # Copy project files
 COPY . .
 
-# Test Debian build using ci-local.sh script
-CMD ["bash", "scripts/ci-local.sh"]
+# Test offline Debian build (simulates Debian buildd environment)
+# Step 1: Vendor dependencies (this is done in release workflow before creating orig.tar.gz)
+# Step 2: Build with network disabled (simulates Debian buildd)
+CMD ["bash", "-c", "\
+    echo '=== Testing Debian Offline Build ===' && \
+    echo '' && \
+    echo '1. Vendoring dependencies (simulates release workflow)...' && \
+    cargo vendor vendor && \
+    mkdir -p .cargo && \
+    echo '[source.crates-io]' > .cargo/config.toml && \
+    echo 'replace-with = \"vendored-sources\"' >> .cargo/config.toml && \
+    echo '[source.vendored-sources]' >> .cargo/config.toml && \
+    echo 'directory = \"vendor\"' >> .cargo/config.toml && \
+    for f in vendor/*/.cargo-checksum.json; do sed -i 's/\"files\":{[^}]*}/\"files\":{}/g' \"$f\" 2>/dev/null || true; done && \
+    echo \"✅ Vendored $(ls -d vendor/*/ | wc -l) crates\" && \
+    echo '' && \
+    echo '2. Building with OFFLINE mode (simulates Debian buildd)...' && \
+    export CARGO_NET_OFFLINE=true && \
+    export OPENSSL_NO_VENDOR=1 && \
+    make -f debian/rules clean && \
+    make -f debian/rules build && \
+    echo '' && \
+    echo '3. Verifying build...' && \
+    if ls target/release/lsport 2>/dev/null; then \
+        echo '✅ Binary built successfully at target/release/lsport'; \
+        ./target/release/lsport --version; \
+    else \
+        echo '❌ Binary not found!'; \
+        exit 1; \
+    fi && \
+    echo '' && \
+    echo '=== ✅ Offline Debian build test PASSED ===' \
+"]

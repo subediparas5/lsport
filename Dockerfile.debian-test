@@ -38,7 +38,7 @@ CMD ["bash", "-c", "\
     echo '[source.vendored-sources]' >> .cargo/config.toml && \
     echo 'directory = \"vendor\"' >> .cargo/config.toml && \
     rm -rf vendor/winapi-i686-pc-windows-gnu/lib/*.a vendor/winapi-x86_64-pc-windows-gnu/lib/*.a && \
-    rm -rf vendor/*/docs/ vendor/*/doc/ && \
+    rm -rf vendor/*/docs/ && \
     for f in vendor/*/.cargo-checksum.json; do sed -i 's/\"files\":{[^}]*}/\"files\":{}/g' \"$f\" 2>/dev/null || true; done && \
     echo \"✅ Vendored $(ls -d vendor/*/ | wc -l) crates\" && \
     echo '' && \

@@ -336,12 +336,12 @@ jobs:
 
           # Remove unnecessary files to fix lintian errors:
           # - Windows-specific library files (not needed for Linux)
-          # - Pre-generated documentation (source-is-missing errors)
+          # - Pre-generated rustdoc output (source-is-missing errors)
+          # Note: Keep vendor/*/doc/ - those contain compile-time includes
           echo "Cleaning up unnecessary vendor files..."
           rm -rf vendor/winapi-i686-pc-windows-gnu/lib/*.a
           rm -rf vendor/winapi-x86_64-pc-windows-gnu/lib/*.a
           rm -rf vendor/*/docs/
-          rm -rf vendor/*/doc/
           rm -rf vendor/windows*/lib/*.a 2>/dev/null || true
 
           # Clear checksums for Debian compatibility (source may be modified)

@@ -360,8 +360,7 @@ jobs:
           # Build source package
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg.outputs.key_id }}"
 
-          # Move artifacts to parent
-          mv ../lsport_${VERSION}* ../
+          # Clean up build area
           cd ..
           rm -rf build-area
 

@@ -334,6 +334,16 @@ jobs:
           mkdir -p .cargo
           printf '%s\n' '[source.crates-io]' 'replace-with = "vendored-sources"' '' '[source.vendored-sources]' 'directory = "vendor"' > .cargo/config.toml
 
+          # Remove unnecessary files to fix lintian errors:
+          # - Windows-specific library files (not needed for Linux)
+          # - Pre-generated documentation (source-is-missing errors)
+          echo "Cleaning up unnecessary vendor files..."
+          rm -rf vendor/winapi-i686-pc-windows-gnu/lib/*.a
+          rm -rf vendor/winapi-x86_64-pc-windows-gnu/lib/*.a
+          rm -rf vendor/*/docs/
+          rm -rf vendor/*/doc/
+          rm -rf vendor/windows*/lib/*.a 2>/dev/null || true
+
           # Clear checksums for Debian compatibility (source may be modified)
           for f in vendor/*/.cargo-checksum.json; do
             sed -i 's/"files":{[^}]*}/"files":{}/' "$f" || true

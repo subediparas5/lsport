@@ -344,22 +344,38 @@ jobs:
       - name: Build and upload
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
-          # Include vendor and .cargo in orig.tar.gz for offline builds
+          WORKDIR=$(pwd)
+
+          # Create orig.tar.gz (includes vendor and .cargo for offline builds)
           tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
+
+          # Build source package in a clean directory to avoid dpkg-source errors
+          # (dpkg-source compares working dir to tarball - they must be identical)
+          cd ..
+          mkdir -p build-area
+          cd build-area
+          tar -xzf ../lsport_${VERSION}.orig.tar.gz
+          cp -a "${WORKDIR}/debian" .
+
+          # Build source package
           dpkg-buildpackage -S -sa -d -k"${{ steps.gpg.outputs.key_id }}"
 
-          echo "--- Lintian ---"
-          lintian --info ../lsport_${VERSION}-1.dsc || true
+          # Move artifacts to parent
+          mv ../lsport_${VERSION}* ../
+          cd ..
+          rm -rf build-area
 
-          cat > ~/.dput.cf << EOF
+          echo "--- Lintian ---"
+          lintian --info lsport_${VERSION}-1.dsc || true
+
+          cat > ~/.dput.cf << 'DPUTEOF'
           [mentors]
           fqdn = mentors.debian.net
           incoming = /upload
           method = https
           allow_unsigned_uploads = 0
-          EOF
+          DPUTEOF
 
-          cd ..
           echo "Uploading lsport_${VERSION}-1_source.changes to Debian Mentors..."
           if dput mentors lsport_${VERSION}-1_source.changes; then
             echo "✅ Successfully uploaded version ${VERSION} to Debian Mentors"
@@ -370,7 +386,9 @@ jobs:
 
       - name: Copy artifacts to workspace
         run: |
-          cp ../lsport_*.orig.tar.gz ../lsport_*.debian.tar.xz ../lsport_*.dsc ../lsport_*.changes .
+          WORKDIR=$(pwd)
+          cd ..
+          cp lsport_*.orig.tar.gz lsport_*.debian.tar.xz lsport_*.dsc lsport_*.changes "${WORKDIR}/"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

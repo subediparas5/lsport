@@ -139,3 +139,59 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --no-deps --all-features
+
+  # Debian offline build test
+  debian:
+    name: Debian Build (offline)
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.88-bookworm
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y debhelper devscripts libssl-dev libssh2-1-dev zlib1g-dev pkg-config
+
+      - uses: actions/checkout@v4
+
+      - name: Vendor dependencies
+        run: |
+          cargo vendor vendor
+          mkdir -p .cargo
+          printf '%s\n' '[source.crates-io]' 'replace-with = "vendored-sources"' '' '[source.vendored-sources]' 'directory = "vendor"' > .cargo/config.toml
+          for f in vendor/*/.cargo-checksum.json; do
+            sed -i 's/"files":{[^}]*}/"files":{}/' "$f" || true
+          done
+
+      - name: Test source package creation
+        run: |
+          VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          WORKDIR=$(pwd)
+
+          # Create orig.tar.gz (same as release workflow)
+          tar --exclude='.git' --exclude='debian' --exclude='target' -czf ../lsport_${VERSION}.orig.tar.gz .
+
+          # Build in clean directory (same as release workflow)
+          cd ..
+          mkdir -p build-area
+          cd build-area
+          tar -xzf ../lsport_${VERSION}.orig.tar.gz
+          cp -a "${WORKDIR}/debian" .
+
+          # Build source package (unsigned)
+          dpkg-buildpackage -S -us -uc -d
+
+          echo "✅ Source package created successfully"
+          ls -la ../lsport_${VERSION}*
+
+      - name: Test offline binary build
+        env:
+          CARGO_NET_OFFLINE: "true"
+          OPENSSL_NO_VENDOR: "1"
+        run: |
+          make -f debian/rules clean
+          make -f debian/rules build
+          ls -la target/release/lsport
+          ./target/release/lsport --version
